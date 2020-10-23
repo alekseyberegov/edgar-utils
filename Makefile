@@ -12,3 +12,7 @@ distro.build:  ## Build the wheel distribution
 .PHONY: distro.push
 distro.push:  ## Push the distribution
 	twine upload dist/*
+
+.PHONY: distro.clean
+distro.clean:  ## Clean distro artifacts
+	rm -rf build dist edgar-utils.egg-info
