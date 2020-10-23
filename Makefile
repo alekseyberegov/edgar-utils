@@ -1,0 +1,14 @@
+.DEFAULT_GOAL := help
+
+# From https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
+.PHONY: help
+help:
+	@grep -E '^[a-zA-Z_-_.]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+.PHONY: distro.build
+distro.build:  ## Build the wheel distribution
+	python setup.py bdist_wheel
+
+.PHONY: distro.push
+distro.push:  ## Push the distribution
+	twine upload dist/*
