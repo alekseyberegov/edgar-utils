@@ -1,1 +1,1 @@
-# Utils for managging EDGAR filings
+# Utils for managing EDGAR filings
