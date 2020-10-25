@@ -16,3 +16,15 @@ distro.push:  ## Push the distribution
 .PHONY: distro.clean
 distro.clean:  ## Clean distro artifacts
 	rm -rf build dist edgar-utils.egg-info
+
+.PHONY: develop.install
+develop.install:  ## Install local code as the package
+	pip install -e .
+
+.PHONY: develop.setup
+develop.setup:  ## Install dependencies for the development
+	python setup.py develop
+
+.PHONY: develop.test
+develop.test:  ## Run tests
+	pytest

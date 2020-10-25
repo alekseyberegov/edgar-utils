@@ -3,10 +3,10 @@ from setuptools import find_packages
 
 setup(
     name='edgar-utils',
-    version='0.0.1',
+    version='0.0.2',
     author='Aleksey Beregov',
     author_email='beregov@teladictum.com',
-    packages=find_packages(include=['edgar-utils', 'edgar-utils.*']),
+    packages=find_packages(include=['edgar_utils']),
     python_requires='>=3.6',
     url='https://pypi.org/project/edgar-utils/',
     license='LICENSE.txt',
