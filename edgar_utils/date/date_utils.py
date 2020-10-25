@@ -9,7 +9,7 @@ class Date(object):
             Parameters
             ----------
             date_str : str
-            The date string in YYYY-MM-DD format
+                The date string in YYYY-MM-DD format
         """
         self.date_inst = date.fromisoformat(date_str)
         super().__init__()
@@ -26,4 +26,26 @@ class Date(object):
         return self.date_inst.__str__()
 
     def quarter(self):
+        """
+            Returns
+            -------
+            int
+                the quarter number 1..4
+        """
         return  (self.date_inst.month - 1) // 3 + 1
+
+    def diff_quarter(self, from_date: 'Date') -> int:
+        """
+            Returns the difference between the quarter number of this date and that of from_date
+
+            Parameters
+            ----------
+            from_date : Date
+                the date from which quarters are counted
+
+            Return
+            ------
+            int
+                the difference between the quarter number of this date and that of from_date
+        """
+        return self.quarter() - from_date.quarter()

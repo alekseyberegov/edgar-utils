@@ -29,6 +29,17 @@ class TestDate(object):
         ("2020-11-01", 4),
         ("2020-12-01", 4),
     ])
-    def test_quarter(self, date_str, expected_result):
+    def test_quarter(self, date_str: str, expected_result: int):
         date_obj = Date(date_str)
         assert date_obj.quarter() == expected_result
+
+    @pytest.mark.parametrize("from_date_str,to_date_str, expected_result", [
+        ("2020-01-01", "2020-01-20", 0),
+        ("2020-01-01", "2020-03-20", 0),
+        ("2020-01-01", "2020-05-20", 1),
+        ("2020-01-01", "2020-07-20", 2),
+        ("2020-01-01", "2020-12-20", 3),
+    ])
+    def test_diff_quarter(self, from_date_str: str, to_date_str: str, expected_result: int):
+        to_date: Date = Date(to_date_str)
+        assert to_date.diff_quarter(Date(from_date_str)) == expected_result
