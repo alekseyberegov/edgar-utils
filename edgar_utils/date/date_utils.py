@@ -25,6 +25,10 @@ class Date(object):
         date_obj.date_inst = date_inst
         return date_obj
 
+    def __eq__(self, o: object) -> bool:
+        another: Date = o
+        return another.date_inst == self.date_inst
+
     def __str__(self) -> str:
         """
             Converts this date object into a YYYY-MM-DD string
@@ -78,25 +82,33 @@ class Date(object):
         delta: timedelta = self.date_inst - from_date.date_inst
         return delta.days + 1
 
-    def quarter_dates(self) -> Tuple[date, date]:
+    def quarter_dates(self) -> Tuple['Date', 'Date']:
         qbegins: date = None
         for qdate in [date(self.date_inst.year + m // 12, m % 12, 1) for m in QUARTER_START_MONTH]:
             if self.date_inst < qdate:
-                return (qbegins, qdate - ONE_DAY)
+                return (Date.from_date(qbegins), Date.from_date(qdate - ONE_DAY))
             qbegins = qdate
 
     def backfill(self, from_date: 'Date') -> Generator[Tuple[str, int, date, date], None, None]:
         if self.diff_days(from_date) <= 0:
             return
 
-        n_quarters: int = self.diff_quarters(from_date)
-        if n_quarters == 0:
-            yield ("D", self.diff_days(from_date), from_date.date_inst, self.date_inst)
+        qnum: int = self.diff_quarters(from_date)
+        (qbeg, qend) = from_date.quarter_dates()
+
+        if qnum == 0:
+            yield ("Q" if from_date == qbeg and self == qend else "D", 
+                self.diff_days(from_date), from_date.date_inst, self.date_inst)
         else:
-            (start_date, end_date) = self.quarter_dates()
-            yield("D", None, None, None)
-            for q in range(2, n_quarters):
-                yield("Q", None, None, None)
+            yield("Q" if from_date == qbeg else "D", 
+                qend.diff_days(from_date), from_date.date_inst, qend.date_inst)
+
+            for q in range(2, qnum + 1):
+                (qbeg, qend) = qend.add_days(1).quarter_dates()
+                yield("Q", qend.diff_days(qbeg), qbeg, qend)
+
+            (qbeg, qend) = qend.add_days(1).quarter_dates()
+            yield("Q" if self == qend else "D", self.diff_days(qbeg), qbeg, self)
                 
     def add_days(self, days: int) -> 'Date':
         return Date.from_date(self.date_inst + timedelta(days))

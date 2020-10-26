@@ -2,6 +2,7 @@ import pytest
 
 from edgar_utils.date.date_utils import Date, ONE_DAY
 from datetime import date, timedelta
+from typing import Dict
 
 class TestDate(object):
     def test_init_success(self):
@@ -85,6 +86,25 @@ class TestDate(object):
             assert end_date == to_date.date_inst
         assert had_results
 
+    @pytest.mark.parametrize("from_date_str, to_date_str, elems", [
+        ("2020-01-10", "2020-04-20",   "DD"),
+        ("2020-01-10", "2020-07-20",  "DQD"),
+        ("2020-01-01", "2020-03-31",    "Q"),
+        ("2020-01-01", "2020-12-31", "QQQQ"),
+        ("2020-01-01", "2020-12-30", "QQQD"),
+        ("2020-01-02", "2020-10-20", "DQQD"),
+        ("2020-01-01", "2020-06-30",   "QQ"),
+        ("2020-01-10", "2020-06-20",   "DD"),
+    ])
+    def test_backfill_diff_quarters(self, from_date_str, to_date_str, elems):
+        to_date: Date = Date(to_date_str)
+        from_date: Date = Date(from_date_str)
+
+        items : str = ""
+        for (grain, num, start_date, end_date) in to_date.backfill(from_date):
+            items += grain
+        assert items == elems
+
     @pytest.mark.parametrize("date_str, expected_quarter_start, expected_quarter_end", [
         ("2020-01-01", "2020-01-01", "2020-03-31"),
         ("2020-03-30", "2020-01-01", "2020-03-31"),
@@ -102,8 +122,8 @@ class TestDate(object):
     def test_quarter_dates(self, date_str: str, expected_quarter_start: str, expected_quarter_end: str):
         date_obj: Date = Date(date_str)
         assert date_obj.quarter_dates() == (
-            date.fromisoformat(expected_quarter_start),
-            date.fromisoformat(expected_quarter_end))
+            Date(expected_quarter_start),
+            Date(expected_quarter_end))
 
     @pytest.mark.parametrize("date_str, expected_result, days", [
         ("2020-01-01", "2020-01-01",  0),
