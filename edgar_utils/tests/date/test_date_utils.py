@@ -8,8 +8,16 @@ class TestDatePeriodType(object):
     def test_str_day(self):
         assert str(DatePeriodType.DAY) == "D"
     
-    def test_str_day(self):
+    def test_str_quarter(self):
         assert str(DatePeriodType.QUARTER) == "Q"
+
+    def test_from_string_day(self):
+       period_type: DatePeriodType = DatePeriodType.from_string("D")
+       assert period_type == DatePeriodType.DAY
+
+    def test_from_string_quarter(self):
+       period_type: DatePeriodType = DatePeriodType.from_string("Q")
+       assert period_type == DatePeriodType.QUARTER
 
 
 class TestDatePeriod(object):

@@ -16,8 +16,8 @@ class DatePeriodType(IntEnum):
 
     @staticmethod
     def from_string(code: str) -> 'DatePeriodType':
-        if str == "D": return DatePeriodType.DAY
-        if str == "Q": return DatePeriodType.QUARTER
+        if code == "D": return DatePeriodType.DAY
+        if code == "Q": return DatePeriodType.QUARTER
 
 class DatePeriodException(Exception):
     pass
@@ -40,6 +40,8 @@ class DatePeriod(object):
         self.start_date = qbeg
         self.end_date = qend
         self.period_type = DatePeriodType.QUARTER
+        self.num_days = self.end_date.diff_days(self.start_date)
+
         return self
 
     def __str__(self) -> str:
