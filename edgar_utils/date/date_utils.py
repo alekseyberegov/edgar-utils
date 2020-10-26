@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from typing import List, Set, Dict, Tuple, Optional, Generator
 from enum import IntEnum
@@ -14,13 +14,43 @@ class DatePeriodType(IntEnum):
         i: int = int(self.value)
         return "DQ"[i - 1 : i]
 
+    @staticmethod
+    def from_string(code: str) -> 'DatePeriodType':
+        if str == "D": return DatePeriodType.DAY
+        if str == "Q": return DatePeriodType.QUARTER
+
+class DatePeriodException(Exception):
+    pass
+
 
 class DatePeriod(object):
-    def __init__(self, period_type: DatePeriodType, num_days: int, start_date: 'Date', end_date: 'Date') -> None:
+    def __init__(self, period_type: DatePeriodType, start_date: 'Date', end_date: 'Date') -> None:
         self.period_type = period_type
-        self.num_days = num_days
         self.start_date = start_date
         self.end_date = end_date
+        self.num_days = self.end_date.diff_days(self.start_date)
+
+    def expand_to_quarter(self) -> 'DatePeriod':
+        (qbeg, qend) = self.start_date.quarter_dates()
+
+        if self.end_date.date_inst > qend.date_inst:
+            raise DatePeriodException("Can't fit into one quarter: {0} is greater than {1}"
+                .format(self.end_date.date_inst,qend.date_inst))
+
+        self.start_date = qbeg
+        self.end_date = qend
+        self.period_type = DatePeriodType.QUARTER
+        return self
+
+    def __str__(self) -> str:
+        return str(self.period_type) \
+            + "," + str(self.start_date.date_inst) \
+            + "," + str(self.end_date.date_inst) 
+
+    @staticmethod
+    def from_string(serialized: str) -> 'DatePeriod':
+        s: List[str] = serialized.split(",")
+        return DatePeriod(DatePeriodType.from_string(s[0]),  Date(s[1]), Date(s[2]))
 
 
 class Date(object):
@@ -146,18 +176,16 @@ class Date(object):
 
         if qnum == 0:
             yield DatePeriod(DatePeriodType.QUARTER if from_date == qbeg and self == qend else DatePeriodType.DAY, 
-                self.diff_days(from_date), from_date.date_inst, self.date_inst)
+                from_date, self)
         else:
-            yield DatePeriod(DatePeriodType.QUARTER if from_date == qbeg else DatePeriodType.DAY, 
-                qend.diff_days(from_date), from_date.date_inst, qend.date_inst)
+            yield DatePeriod(DatePeriodType.QUARTER if from_date == qbeg else DatePeriodType.DAY, from_date, qend)
 
             for q in range(2, qnum + 1):
                 (qbeg, qend) = qend.add_days(1).quarter_dates()
-                yield DatePeriod(DatePeriodType.QUARTER, qend.diff_days(qbeg), qbeg, qend)
+                yield DatePeriod(DatePeriodType.QUARTER, qbeg, qend)
 
             (qbeg, qend) = qend.add_days(1).quarter_dates()
-            yield DatePeriod(DatePeriodType.QUARTER if self == qend else DatePeriodType.DAY, 
-                self.diff_days(qbeg), qbeg, self)
+            yield DatePeriod(DatePeriodType.QUARTER if self == qend else DatePeriodType.DAY, qbeg, self)
                 
     def add_days(self, days: int) -> 'Date':
         """

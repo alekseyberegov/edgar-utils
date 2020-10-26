@@ -1,8 +1,38 @@
 import pytest
 
-from edgar_utils.date.date_utils import Date, ONE_DAY, DatePeriodType
+from edgar_utils.date.date_utils import Date, DatePeriod, DatePeriodException, ONE_DAY, DatePeriodType
 from datetime import date, timedelta
 from typing import Dict
+
+class TestDatePeriodType(object):
+    def test_str_day(self):
+        assert str(DatePeriodType.DAY) == "D"
+    
+    def test_str_day(self):
+        assert str(DatePeriodType.QUARTER) == "Q"
+
+
+class TestDatePeriod(object):
+    @pytest.mark.parametrize("period_str, expected_result", [
+        ("D,2020-02-10,2020-03-31", "Q,2020-01-01,2020-03-31"),
+        ("D,2020-01-01,2020-03-31", "Q,2020-01-01,2020-03-31"),
+    ])
+    def test_expand_to_quarter_success(self, period_str: str, expected_result: str):
+        date_period = DatePeriod.from_string(period_str)
+        date_period.expand_to_quarter()
+        assert str(date_period) == expected_result
+
+    @pytest.mark.parametrize("period_str", [
+        ("D,2020-02-10,2020-04-30"),
+        ("D,2020-04-01,2020-09-30"),
+    ])
+    def test_expand_to_quarter_fail(self, period_str: str):
+        date_period = DatePeriod.from_string(period_str)
+        try: 
+            date_period.expand_to_quarter()
+            assert False
+        except DatePeriodException:
+            pass
 
 class TestDate(object):
     def test_init_success(self):
@@ -59,13 +89,20 @@ class TestDate(object):
         to_date: Date = Date(to_date_str)
         assert to_date.diff_days(Date(from_date_str)) == expected_result
 
-    def test_backfill_same_date(self):
-        to_date: Date = Date("2020-10-19")
-        from_date: Date = Date("2020-10-20")
+    @pytest.mark.parametrize("from_date_str,to_date_str,has_backfill", [
+        ("2020-01-10", "2020-01-09", False),
+        ("2020-01-10", "2020-01-10", True),
+        ("2020-01-10", "2020-01-01", False),
+        ("2020-03-01", "2020-01-01", False),
+    ])
+    def test_backfill_same_date(self, from_date_str,to_date_str,has_backfill):
+        to_date: Date = Date(to_date_str)
+        from_date: Date = Date(from_date_str)
 
-        for s in to_date.backfill(from_date):
-            assert False, "should return an empty iterator"
-        assert True
+        for _ in to_date.backfill(from_date):
+            assert has_backfill, "should return an empty iterator"
+            return
+        assert not has_backfill
 
     @pytest.mark.parametrize("from_date_str,to_date_str, grain_expected, num_expected", [
         ("2020-01-01", "2020-01-20", DatePeriodType.DAY, 20),
@@ -82,8 +119,8 @@ class TestDate(object):
             had_results = True
             assert date_period.period_type == grain_expected
             assert date_period.num_days == num_expected
-            assert date_period.start_date == from_date.date_inst
-            assert date_period.end_date == to_date.date_inst
+            assert date_period.start_date == from_date
+            assert date_period.end_date == to_date
         assert had_results
 
     @pytest.mark.parametrize("from_date_str, to_date_str, elems", [
