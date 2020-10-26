@@ -41,9 +41,9 @@ class TestDate(object):
         ("2020-01-01", "2020-07-20", 2),
         ("2020-01-01", "2020-12-20", 3),
     ])
-    def test_diff_quarter(self, from_date_str: str, to_date_str: str, expected_result: int):
+    def test_diff_quarters(self, from_date_str: str, to_date_str: str, expected_result: int):
         to_date: Date = Date(to_date_str)
-        assert to_date.diff_quarter(Date(from_date_str)) == expected_result
+        assert to_date.diff_quarters(Date(from_date_str)) == expected_result
 
     @pytest.mark.parametrize("from_date_str,to_date_str, expected_result", [
         ("2020-01-01", "2020-01-20",  19),
@@ -74,10 +74,12 @@ class TestDate(object):
         from_date: Date = Date(from_date_str)
 
         had_results = False
-        for (grain, num) in to_date.backfill(from_date):
+        for (grain, num, start_date, end_date) in to_date.backfill(from_date):
             had_results = True
             assert grain == grain_expected
             assert num == num_expected
+            assert start_date == from_date.date_inst
+            assert end_date == to_date.date_inst
         assert had_results
 
     @pytest.mark.parametrize("date_str, expected_quarter_start, expected_quarter_end", [
