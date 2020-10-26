@@ -1,18 +1,27 @@
 from datetime import date, timedelta
-import enum
+
 from typing import List, Set, Dict, Tuple, Optional, Generator
 from enum import IntEnum
 
 ONE_DAY: timedelta = timedelta(days=1)
 QUARTER_START_MONTH: Tuple[int, ...] = (1, 4, 7, 10, 13)
 
-class BackfillPeriod(IntEnum):
+class DatePeriodType(IntEnum):
     DAY     = 1,
     QUARTER = 2
 
     def __str__(self):
         i: int = int(self.value)
         return "DQ"[i - 1 : i]
+
+
+class DatePeriod(object):
+    def __init__(self, period_type: DatePeriodType, num_days: int, start_date: 'Date', end_date: 'Date') -> None:
+        self.period_type = period_type
+        self.num_days = num_days
+        self.start_date = start_date
+        self.end_date = end_date
+
 
 class Date(object):
     """ 
@@ -120,14 +129,14 @@ class Date(object):
                 return (Date.from_date(qbegins), Date.from_date(qdate - ONE_DAY))
             qbegins = qdate
 
-    def backfill(self, from_date: 'Date') -> Generator[Tuple[str, int, 'Date', 'Date'], None, None]:
+    def backfill(self, from_date: 'Date') -> Generator[DatePeriod, None, None]:
         """
             Returns backfill periods between from_date and this Date.
-            Each period is represented by the following tuple: (period type, days, start date, end date)
+            Each period is represented by DatePeriod
 
             Return
             ------
-            Generator[Tuple[str, int, 'Date', 'Date']]
+            Generator[DatePeriod]
         """
         if self.diff_days(from_date) <= 0:
             return
@@ -136,18 +145,19 @@ class Date(object):
         (qbeg, qend) = from_date.quarter_dates()
 
         if qnum == 0:
-            yield (BackfillPeriod.QUARTER if from_date == qbeg and self == qend else BackfillPeriod.DAY, 
+            yield DatePeriod(DatePeriodType.QUARTER if from_date == qbeg and self == qend else DatePeriodType.DAY, 
                 self.diff_days(from_date), from_date.date_inst, self.date_inst)
         else:
-            yield(BackfillPeriod.QUARTER if from_date == qbeg else BackfillPeriod.DAY, 
+            yield DatePeriod(DatePeriodType.QUARTER if from_date == qbeg else DatePeriodType.DAY, 
                 qend.diff_days(from_date), from_date.date_inst, qend.date_inst)
 
             for q in range(2, qnum + 1):
                 (qbeg, qend) = qend.add_days(1).quarter_dates()
-                yield(BackfillPeriod.QUARTER, qend.diff_days(qbeg), qbeg, qend)
+                yield DatePeriod(DatePeriodType.QUARTER, qend.diff_days(qbeg), qbeg, qend)
 
             (qbeg, qend) = qend.add_days(1).quarter_dates()
-            yield(BackfillPeriod.QUARTER if self == qend else BackfillPeriod.DAY, self.diff_days(qbeg), qbeg, self)
+            yield DatePeriod(DatePeriodType.QUARTER if self == qend else DatePeriodType.DAY, 
+                self.diff_days(qbeg), qbeg, self)
                 
     def add_days(self, days: int) -> 'Date':
         """

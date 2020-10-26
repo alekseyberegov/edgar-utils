@@ -1,6 +1,6 @@
 import pytest
 
-from edgar_utils.date.date_utils import Date, ONE_DAY, BackfillPeriod
+from edgar_utils.date.date_utils import Date, ONE_DAY, DatePeriodType
 from datetime import date, timedelta
 from typing import Dict
 
@@ -68,22 +68,22 @@ class TestDate(object):
         assert True
 
     @pytest.mark.parametrize("from_date_str,to_date_str, grain_expected, num_expected", [
-        ("2020-01-01", "2020-01-20", BackfillPeriod.DAY, 20),
-        ("2020-01-01", "2020-01-25", BackfillPeriod.DAY, 25),
-        ("2020-01-01", "2020-01-02", BackfillPeriod.DAY,  2),
-        ("2020-01-01", "2020-01-01", BackfillPeriod.DAY,  1),
+        ("2020-01-01", "2020-01-20", DatePeriodType.DAY, 20),
+        ("2020-01-01", "2020-01-25", DatePeriodType.DAY, 25),
+        ("2020-01-01", "2020-01-02", DatePeriodType.DAY,  2),
+        ("2020-01-01", "2020-01-01", DatePeriodType.DAY,  1),
     ])
     def test_backfill_same_quarter(self, from_date_str: str, to_date_str: str, grain_expected: str, num_expected: int):
         to_date: Date = Date(to_date_str)
         from_date: Date = Date(from_date_str)
 
         had_results = False
-        for (grain, num, start_date, end_date) in to_date.backfill(from_date):
+        for date_period in to_date.backfill(from_date):
             had_results = True
-            assert grain == grain_expected
-            assert num == num_expected
-            assert start_date == from_date.date_inst
-            assert end_date == to_date.date_inst
+            assert date_period.period_type == grain_expected
+            assert date_period.num_days == num_expected
+            assert date_period.start_date == from_date.date_inst
+            assert date_period.end_date == to_date.date_inst
         assert had_results
 
     @pytest.mark.parametrize("from_date_str, to_date_str, elems", [
@@ -101,8 +101,8 @@ class TestDate(object):
         from_date: Date = Date(from_date_str)
 
         items : str = ""
-        for (grain, num, start_date, end_date) in to_date.backfill(from_date):
-            items += str(grain)
+        for date_period in to_date.backfill(from_date):
+            items += str(date_period.period_type)
         assert items == elems
 
     @pytest.mark.parametrize("date_str, expected_quarter_start, expected_quarter_end", [
