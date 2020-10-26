@@ -1,4 +1,8 @@
-from datetime import date
+from datetime import date, timedelta
+from typing import List, Set, Dict, Tuple, Optional
+
+ONE_DAY: timedelta = timedelta(days=1)
+QUARTER_START_MONTH: Tuple[int, ...] = (1, 4, 7, 10, 13)
 
 class Date(object):
     """ 
@@ -49,3 +53,37 @@ class Date(object):
                 the difference between the quarter number of this date and that of from_date
         """
         return self.quarter() - from_date.quarter()
+
+    def diff_days(self, from_date: 'Date') -> int:
+        """
+            Returns the number of days between this and from_date dates
+
+            Parameters
+            ----------
+            from_date : Date
+                the date from which days are counted
+
+            Return
+            ------
+            int
+                the number of days between this and from_date dates
+        """
+        delta: timedelta = self.date_inst - from_date.date_inst
+        return delta.days
+
+    def quarter_dates(self):
+        qbegins: date = None
+        for qdate in [date(self.date_inst.year + m // 12, m % 12, 1) for m in QUARTER_START_MONTH]:
+            if self.date_inst < qdate:
+                return (qbegins, qdate - ONE_DAY)
+            qbegins = qdate
+
+    def backfill(self, from_date: 'Date'):
+        if self.date_inst == from_date.date_inst:
+            return
+
+        n_quarters: int = self.diff_quarter(from_date)
+        if n_quarters == 0:
+            yield ("D", self.diff_days(from_date))
+        else:
+            return
