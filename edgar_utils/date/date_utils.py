@@ -1,8 +1,18 @@
 from datetime import date, timedelta
+import enum
 from typing import List, Set, Dict, Tuple, Optional, Generator
+from enum import IntEnum
 
 ONE_DAY: timedelta = timedelta(days=1)
 QUARTER_START_MONTH: Tuple[int, ...] = (1, 4, 7, 10, 13)
+
+class BackfillPeriod(IntEnum):
+    DAY     = 1,
+    QUARTER = 2
+
+    def __str__(self):
+        i: int = int(self.value)
+        return "DQ"[i - 1 : i]
 
 class Date(object):
     """ 
@@ -21,6 +31,19 @@ class Date(object):
 
     @staticmethod
     def from_date(date_inst: date) -> 'Date':
+        """
+            Create Edgar Date object from a date instance
+
+            Parameters
+            ----------
+            date_inst: date
+                the date instance
+
+            Return
+            ------
+            Date
+                the Edgar Date instance
+        """
         date_obj = Date(None)
         date_obj.date_inst = date_inst
         return date_obj
@@ -83,13 +106,29 @@ class Date(object):
         return delta.days + 1
 
     def quarter_dates(self) -> Tuple['Date', 'Date']:
+        """
+            Returns a quater to which the Date belongs
+
+            Return
+            ------
+            Tuple[Date, Date]
+                The quarter's start and end dates
+        """
         qbegins: date = None
         for qdate in [date(self.date_inst.year + m // 12, m % 12, 1) for m in QUARTER_START_MONTH]:
             if self.date_inst < qdate:
                 return (Date.from_date(qbegins), Date.from_date(qdate - ONE_DAY))
             qbegins = qdate
 
-    def backfill(self, from_date: 'Date') -> Generator[Tuple[str, int, date, date], None, None]:
+    def backfill(self, from_date: 'Date') -> Generator[Tuple[str, int, 'Date', 'Date'], None, None]:
+        """
+            Returns backfill periods between from_date and this Date.
+            Each period is represented by the following tuple: (period type, days, start date, end date)
+
+            Return
+            ------
+            Generator[Tuple[str, int, 'Date', 'Date']]
+        """
         if self.diff_days(from_date) <= 0:
             return
 
@@ -97,18 +136,31 @@ class Date(object):
         (qbeg, qend) = from_date.quarter_dates()
 
         if qnum == 0:
-            yield ("Q" if from_date == qbeg and self == qend else "D", 
+            yield (BackfillPeriod.QUARTER if from_date == qbeg and self == qend else BackfillPeriod.DAY, 
                 self.diff_days(from_date), from_date.date_inst, self.date_inst)
         else:
-            yield("Q" if from_date == qbeg else "D", 
+            yield(BackfillPeriod.QUARTER if from_date == qbeg else BackfillPeriod.DAY, 
                 qend.diff_days(from_date), from_date.date_inst, qend.date_inst)
 
             for q in range(2, qnum + 1):
                 (qbeg, qend) = qend.add_days(1).quarter_dates()
-                yield("Q", qend.diff_days(qbeg), qbeg, qend)
+                yield(BackfillPeriod.QUARTER, qend.diff_days(qbeg), qbeg, qend)
 
             (qbeg, qend) = qend.add_days(1).quarter_dates()
-            yield("Q" if self == qend else "D", self.diff_days(qbeg), qbeg, self)
+            yield(BackfillPeriod.QUARTER if self == qend else BackfillPeriod.DAY, self.diff_days(qbeg), qbeg, self)
                 
     def add_days(self, days: int) -> 'Date':
+        """
+            Create a new Date that has specified number of days added to this Date
+
+            Parameters
+            ----------
+            days: int
+                The number of days to add
+
+            Returns
+            -------
+            Date
+                the new Date (with added days)
+        """
         return Date.from_date(self.date_inst + timedelta(days))

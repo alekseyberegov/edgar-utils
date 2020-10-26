@@ -1,6 +1,6 @@
 import pytest
 
-from edgar_utils.date.date_utils import Date, ONE_DAY
+from edgar_utils.date.date_utils import Date, ONE_DAY, BackfillPeriod
 from datetime import date, timedelta
 from typing import Dict
 
@@ -68,10 +68,10 @@ class TestDate(object):
         assert True
 
     @pytest.mark.parametrize("from_date_str,to_date_str, grain_expected, num_expected", [
-        ("2020-01-01", "2020-01-20", "D", 20),
-        ("2020-01-01", "2020-01-25", "D", 25),
-        ("2020-01-01", "2020-01-02", "D",  2),
-        ("2020-01-01", "2020-01-01", "D",  1),
+        ("2020-01-01", "2020-01-20", BackfillPeriod.DAY, 20),
+        ("2020-01-01", "2020-01-25", BackfillPeriod.DAY, 25),
+        ("2020-01-01", "2020-01-02", BackfillPeriod.DAY,  2),
+        ("2020-01-01", "2020-01-01", BackfillPeriod.DAY,  1),
     ])
     def test_backfill_same_quarter(self, from_date_str: str, to_date_str: str, grain_expected: str, num_expected: int):
         to_date: Date = Date(to_date_str)
@@ -102,7 +102,7 @@ class TestDate(object):
 
         items : str = ""
         for (grain, num, start_date, end_date) in to_date.backfill(from_date):
-            items += grain
+            items += str(grain)
         assert items == elems
 
     @pytest.mark.parametrize("date_str, expected_quarter_start, expected_quarter_end", [
