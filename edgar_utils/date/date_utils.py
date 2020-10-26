@@ -8,6 +8,7 @@ class Date(object):
     """ 
         A date class that provides a number of useful methods to track financial fillings
     """
+  
     def __init__(self, date_str: str) -> None:
         """
             Parameters
@@ -15,8 +16,14 @@ class Date(object):
             date_str : str
                 The date string in YYYY-MM-DD format
         """
-        self.date_inst = date.fromisoformat(date_str)
+        self.date_inst = date.fromisoformat(date_str) if date_str != None else None
         super().__init__()
+
+    @staticmethod
+    def from_date(date_inst: date) -> 'Date':
+        date_obj = Date(None)
+        date_obj.date_inst = date_inst
+        return date_obj
 
     def __str__(self) -> str:
         """
@@ -69,7 +76,7 @@ class Date(object):
                 the number of days between this and from_date dates
         """
         delta: timedelta = self.date_inst - from_date.date_inst
-        return delta.days
+        return delta.days + 1
 
     def quarter_dates(self) -> Tuple[date, date]:
         qbegins: date = None
@@ -79,11 +86,17 @@ class Date(object):
             qbegins = qdate
 
     def backfill(self, from_date: 'Date') -> Generator[Tuple[str, int, date, date], None, None]:
-        if self.date_inst == from_date.date_inst:
+        if self.diff_days(from_date) <= 0:
             return
 
         n_quarters: int = self.diff_quarters(from_date)
         if n_quarters == 0:
             yield ("D", self.diff_days(from_date), from_date.date_inst, self.date_inst)
         else:
-            return
+            (start_date, end_date) = self.quarter_dates()
+            yield("D", None, None, None)
+            for q in range(2, n_quarters):
+                yield("Q", None, None, None)
+                
+    def add_days(self, days: int) -> 'Date':
+        return Date.from_date(self.date_inst + timedelta(days))
