@@ -35,25 +35,23 @@ class TestDatePeriod(object):
         ("D,2020-04-01,2020-09-30"),
     ])
     def test_expand_to_quarter_fail(self, period_str: str):
-        date_period = DatePeriod.from_string(period_str)
-        try: 
+        with pytest.raises(DatePeriodException):
+            date_period = DatePeriod.from_string(period_str)
             date_period.expand_to_quarter()
-            assert False
-        except DatePeriodException:
-            pass
 
 class TestDate(object):
-    def test_init_success(self):
-        date_str = "2020-10-25"
+
+    @pytest.mark.parametrize("date_str", [
+        ("2020-10-25"),
+        ("2020-01-01"),
+     ])
+    def test_init_success(self, date_str):
         date_obj = Date(date_str)
         assert date_str == str(date_obj)
     
     def test_init_bad_format(self):
-        try:
-            date_obj = Date("XXX")
-            assert False
-        except ValueError:
-            assert True
+        with pytest.raises(ValueError):
+            date_obj = Date("XXX")  
 
     @pytest.mark.parametrize("date_str, expected_result", [
         ("2020-01-01", 1),

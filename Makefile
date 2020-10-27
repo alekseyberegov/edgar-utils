@@ -27,4 +27,4 @@ develop.setup:  ## Install dependencies for the development
 
 .PHONY: develop.test
 develop.test:  ## Run tests
-	pytest
+	pytest --cov=edgar_utils
