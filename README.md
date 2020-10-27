@@ -10,3 +10,9 @@
                __/ |                                
               |___/                                 
 ```
+
+## Setting up DEV environment
+* Enabling PyTest in VCS. The following parameter should be set to TRUE
+  ```
+    python.testing.pyTestEnabled 
+  ```
