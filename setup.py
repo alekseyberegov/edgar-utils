@@ -14,6 +14,7 @@ setup(
     long_description=open('README.md').read(),
     install_requires=[
         "pytest",
+        "pytest-cov",
     ],
     classifiers=[
         # 3 - Alpha, 4 - Beta, 5 - Production/Stable
