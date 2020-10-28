@@ -15,6 +15,7 @@ setup(
     install_requires=[
         "pytest",
         "pytest-cov",
+        "faker",
     ],
     classifiers=[
         # 3 - Alpha, 4 - Beta, 5 - Production/Stable

@@ -2,8 +2,9 @@ from edgar_utils.repo.repo_fs import RepoDir, RepoObject, RepoFS, RepoEntity
 from edgar_utils.date.date_utils import Date
 
 from pathlib import Path
-from typing import Dict, Iterator, Tuple, List
+from typing import Dict, Generator, Iterator, Tuple, List
 import tempfile, os, datetime
+from unittest.mock import MagicMock
 
 class FileLocked(Exception):
     """File is already locked."""
@@ -65,25 +66,32 @@ class FileRepoObject(RepoObject):
     def __init__(self,parent: FileRepoDir, name: str) -> None:
         self.parent: FileRepoDir = parent
         self.name: str = name
+        self.path: Path = parent.path / name
         parent.children[name] = self
 
-    def iter_content(self, bufsize: int) -> Iterator:
-        pass
+    def iter_content(self, bufsize: int) -> Generator[str, None, None]:
+        with self.path.open(mode = "r", buffering=bufsize) as f:
+            while True:
+                chunk = f.read(bufsize)
+                if len(chunk) == 0:
+                    break
+                yield chunk
 
     def write_content(self, iter: Iterator) -> None:
-        open_flags = (os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        open_flags = (os.O_CREAT | os.O_EXCL | os.O_RDWR)
         open_mode = 0o644
-        handle = os.open(self.path(), open_flags, open_mode)
-        with os.fdopen(handle, "wb") as f:
-            map(f.write, iter)
+        handle = os.open(self.path, open_flags, open_mode)
+        with os.fdopen(handle, "w") as f:
+            for bytes in iter:
+                f.write(bytes)
 
-    def path(self) -> Path:
-        return self.parent.path / self.name
+    def exists(self) -> bool:
+        return self.path.exists()
 
     def __eq__(self, o: object) -> bool:
         if not isinstance(o, FileRepoObject):
             return False
-        return self.path() == o.path()
+        return self.path == o.path
 
 
 class FileRepoFS(RepoFS):

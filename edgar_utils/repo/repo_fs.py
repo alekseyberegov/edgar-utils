@@ -1,5 +1,5 @@
 import abc
-from typing import Tuple, Iterator
+from typing import Tuple, Iterator, Generator
 
 from edgar_utils.date.date_utils import Date
 
@@ -8,7 +8,7 @@ class RepoEntity(metaclass=abc.ABCMeta):
 
 class RepoObject(RepoEntity, metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def iter_content(self, bufsize: int) -> Iterator:
+    def iter_content(self, bufsize: int) -> Generator[str, None, None]:
         pass
 
     @abc.abstractmethod
