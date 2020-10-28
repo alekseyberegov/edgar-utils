@@ -2,8 +2,8 @@ from edgar_utils.repo.repo_fs import RepoDir, RepoObject, RepoFS, RepoEntity
 from edgar_utils.date.date_utils import Date
 
 from pathlib import Path
-from typing import Dict, Iterator
-import tempfile, os
+from typing import Dict, Iterator, Tuple, List
+import tempfile, os, datetime
 
 class FileLocked(Exception):
     """File is already locked."""
@@ -52,8 +52,13 @@ class FileRepoDir(RepoDir):
             if not e.exists():
                 return e
 
-    def lastmodified(self):
-        return max((f.stat().st_mtime, f) for f in self.path.iterdir())[1].read_text()
+    def lastmodified(self) -> Tuple[datetime.datetime, Path]:
+        (timestamp, file) =  max((f.stat().st_mtime, f) for f in self.path.iterdir())
+        return (datetime.datetime.fromtimestamp(timestamp), file)
+
+    def sorted_objects(self) -> List:
+        list = [name for (name, _) in self] 
+        return sorted(list, reverse = True)
 
 
 class FileRepoObject(RepoObject):
