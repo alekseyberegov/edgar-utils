@@ -1,4 +1,5 @@
 from distutils import extension
+from edgar_utils.date.date_utils import DatePeriodType
 from typing import Dict, Iterator, List
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -8,7 +9,7 @@ import pytest
 import tempfile
 from faker import Faker
 
-from edgar_utils.repo.file_repo_fs import FileRepoDir, FileRepoObject
+from edgar_utils.repo.file_repo_fs import FileRepoDir, FileRepoFS, FileRepoObject
 
 YEAR_LIST = [2017, 2018, 2019, 2020]
 
@@ -31,21 +32,48 @@ def dir_prepped() -> tempfile.TemporaryDirectory:
         subdir.mkdir()
     return dir
 
+@pytest.fixture
+def fs_root() -> tempfile.TemporaryDirectory:
+    dir: tempfile.TemporaryDirectory  = tempfile.TemporaryDirectory(suffix = "_edgar_repo_fs")
+    root: Path = Path(dir.name)
+    for i in [DatePeriodType.DAY, DatePeriodType.QUARTER]:
+        subdir: Path = root / str(i)
+        subdir.mkdir()
+        for j in YEAR_LIST:
+            subsubdir: Path = subdir / str(j)
+            subsubdir.mkdir()
+    return dir
+
+
 class TestFileRepoDir(object):
-    def test_base_dir_empty(self, dir_empty: tempfile.TemporaryDirectory) -> None:
+    def test_init_dir_empty(self, dir_empty: tempfile.TemporaryDirectory) -> None:
         dir: FileRepoDir = FileRepoDir(Path(dir_empty.name))
         assert dir.exists()
-        assert dir.child_count() == 0
+        assert len(dir) == 0
 
-    def test_base_dir_prepped(self, dir_prepped: tempfile.TemporaryDirectory) -> None:
+    def test_init_dir_prepped(self, dir_prepped: tempfile.TemporaryDirectory) -> None:
         dir: FileRepoDir = FileRepoDir(Path(dir_prepped.name))
    
         subdirs: Dict[str,int] = {}
-        for (name, path) in dir:
+        for (name, _) in dir:
             subdirs[name] = 1
         
         for i in YEAR_LIST:
             assert str(i) in subdirs
+
+    def test_refresh(self, dir_prepped: tempfile.TemporaryDirectory, fake: Faker) -> None:
+        dir: FileRepoDir = FileRepoDir(Path(dir_prepped.name))
+        assert len(dir) == len(YEAR_LIST)
+
+        name: str = fake.file_name()
+        subdir: Path = dir.path / name
+        subdir.mkdir()
+        assert len(dir) == len(YEAR_LIST)
+        assert name not in dir
+
+        dir.refresh()
+        assert len(dir) == len(YEAR_LIST) + 1
+        assert name in dir
   
     def test_new_object_success(self, dir_empty: tempfile.TemporaryDirectory, fake: Faker) -> None:
         name: str = fake.file_name()
@@ -53,9 +81,18 @@ class TestFileRepoDir(object):
         obj: FileRepoObject = dir.new_object(name)
 
         assert obj.name == name
-        assert dir.child_count() == 1
+        assert len(dir) == 1
         for (_, o) in dir:
             assert o == obj
+
+    def test_new_dir_success(self, dir_empty: tempfile.TemporaryDirectory, fake: Faker) -> None:
+        name: str = fake.file_name(extension="")
+        dir: FileRepoDir = FileRepoDir(Path(dir_empty.name))
+        subdir = dir.new_dir(name)
+
+        assert len(dir) == 1
+        assert name in dir
+        assert subdir.exists()
 
     def test_lastmodified(self, dir_prepped: tempfile.TemporaryDirectory) -> None:
         dir: FileRepoDir = FileRepoDir(Path(dir_prepped.name))
@@ -82,7 +119,7 @@ class TestFileRepoObject(object):
         assert obj.parent == dir
         assert not obj.exists()
         assert name in dir.children
-        assert dir.child_count() == len(YEAR_LIST) + 1
+        assert len(dir) == len(YEAR_LIST) + 1
 
     def test_write_content(self, dir_empty: tempfile.TemporaryDirectory, fake: Faker) -> None:
         name: str = fake.file_name(extension = 'csv')
@@ -167,4 +204,10 @@ class TestFileRepoObject(object):
                 assert False
 
 class TestFileRepoFS(object):
-    pass
+    def test_years(self, fs_root: tempfile.TemporaryDirectory, fake: Faker) -> None:
+        fs: FileRepoFS = FileRepoFS(Path(fs_root.name))
+        for j in [DatePeriodType.DAY, DatePeriodType.QUARTER]:
+            years: List[int] = fs.years(j)
+            assert max(years) == max(YEAR_LIST)
+            for i in YEAR_LIST:
+                assert i in years

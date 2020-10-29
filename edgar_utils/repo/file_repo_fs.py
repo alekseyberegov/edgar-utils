@@ -1,5 +1,5 @@
 from edgar_utils.repo.repo_fs import RepoDir, RepoObject, RepoFS, RepoEntity
-from edgar_utils.date.date_utils import Date
+from edgar_utils.date.date_utils import Date, DatePeriodType
 
 from pathlib import Path
 from typing import Dict, Generator, Iterator, Tuple, List
@@ -16,27 +16,48 @@ class FileLocked(Exception):
 
 
 class FileRepoDir(RepoDir):
-    def __init__(self, dir: Path) -> None:
+    def __init__(self, dir: Path, parent: 'FileRepoDir' = None) -> None:
         self.path : Path = dir.resolve()
+        self.parent : 'FileRepoDir' = parent
         self.children : Dict[str,RepoEntity] = {}
-        
-        if self.path.exists():
-            for e in self.path.iterdir():
-                self.children[e.name] = FileRepoDir(e) if e.is_dir() else FileRepoObject(self, e.name)
-        else:
+
+        if parent is not None:
+            self.parent[dir.name] = self
+
+        self.refresh()
+
+        if not self.path.exists():
             self.path.mkdir()
     
+    def refresh(self) -> None:
+        if self.path.exists():
+            for e in self.path.iterdir():
+                self[e.name] = FileRepoDir(e) if e.is_dir() else FileRepoObject(self, e.name)
+
     def __iter__(self):
         return iter(self.children.items())
+
+    def __len__(self):
+        return len(self.children)
+
+    def __contains__(self, key):
+        return key in self.children
 
     def exists(self) -> bool:
         return self.path.exists()
 
-    def child_count(self) -> int:
-        return len(self.children)
+    def __getitem__(self, key):
+        val = self.children[key]
+        return val
+
+    def __setitem__(self, key, val):
+        self.children[key] = val
 
     def new_object(self, name: str) -> RepoObject:
         return FileRepoObject(self, name)
+
+    def new_dir(self, name: str) -> RepoDir:
+        return FileRepoDir(self.path / name, self)
 
     def tree(self):
         print(f'+ {self.path}')
@@ -67,7 +88,7 @@ class FileRepoObject(RepoObject):
         self.parent: FileRepoDir = parent
         self.name: str = name
         self.path: Path = parent.path / name
-        parent.children[name] = self
+        parent[name] = self
 
     def iter_content(self, bufsize: int) -> Generator[str, None, None]:
         with self.path.open(mode = "r", buffering=bufsize) as f:
@@ -101,31 +122,17 @@ class FileRepoObject(RepoObject):
 
 
 class FileRepoFS(RepoFS):
-    def __init__(self, dir_name: str) -> None:
-        self.root : Path = Path(dir_name)
-        self.root.resolve()
+    def __init__(self, dir: Path) -> None:
+        self.root : FileRepoDir = FileRepoDir(dir)
+        self.root.new_dir(str(DatePeriodType.DAY))
+        self.root.new_dir(str(DatePeriodType.QUARTER))
 
-        if not self.root.exists():
-            self.root.mkdir()
+    def years(self, period_type: DatePeriodType) -> List[int]:
+        return [int(name) for (name, _) in self.root[str(period_type)]]
 
-        self.d_dir = FileRepoDir(self.root / "D")
-        self.q_dir = FileRepoDir(self.root / "Q")
-
-    def get_daily_years(self) -> int:
-        return len(self.d_dir)
+    def latest_dir(self, period_type: DatePeriodType) -> RepoDir:
+        pass
     
-    def get_quarterly_file(self, year: int, quarter: int) -> RepoObject:
-        pass
-
-    def put_quarterly_file(self, year: int, quarter: int, the_file: RepoObject) -> None:
-        pass
-
-    def get_daily_file(self, the_date: Date) -> RepoObject:
-        pass
-
-    def put_daily_file(self, the_date: Date, the_file: RepoObject) -> None:
-        pass
-
     def push(self, remote_repo: 'RepoFS') -> None:
         pass
 
