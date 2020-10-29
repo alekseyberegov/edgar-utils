@@ -77,13 +77,19 @@ class FileRepoObject(RepoObject):
                     break
                 yield chunk
 
-    def write_content(self, iter: Iterator) -> None:
+    def write_content(self, iter: Iterator, override: bool = False) -> None:
+        file: Path = self.path if not override else self.path.with_suffix('.new')
+        
         open_flags = (os.O_CREAT | os.O_EXCL | os.O_RDWR)
         open_mode = 0o644
-        handle = os.open(self.path, open_flags, open_mode)
+        handle = os.open(file, open_flags, open_mode)
         with os.fdopen(handle, "w") as f:
             for bytes in iter:
                 f.write(bytes)
+
+        if override:
+            file.rename(self.path)
+
 
     def exists(self) -> bool:
         return self.path.exists()

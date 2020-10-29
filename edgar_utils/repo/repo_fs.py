@@ -12,7 +12,7 @@ class RepoObject(RepoEntity, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def write_content(self, iter: Iterator) -> None:
+    def write_content(self, iter: Iterator, override: bool = False) -> None:
         pass
 
 class RepoDir(RepoEntity, metaclass=abc.ABCMeta):
