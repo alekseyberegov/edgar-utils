@@ -1,49 +1,15 @@
-from distutils import extension
+import pytest
+import tempfile
+
+from edgar_utils.repo.repo_fs import RepoEntity
 from edgar_utils.date.date_utils import DatePeriodType
 from typing import Dict, Iterator, List
 from pathlib import Path
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
-
-import pytest
-import tempfile
 from faker import Faker
-
 from edgar_utils.repo.file_repo_fs import FileRepoDir, FileRepoFS, FileRepoObject
-
-YEAR_LIST = [2017, 2018, 2019, 2020]
-
-@pytest.fixture
-def fake():
-    fake = Faker()
-    return fake
-
-@pytest.fixture
-def dir_empty() -> tempfile.TemporaryDirectory:
-    dir: tempfile.TemporaryDirectory  = tempfile.TemporaryDirectory(suffix = "_edgar_repo_0")
-    return dir
-
-@pytest.fixture
-def dir_prepped() -> tempfile.TemporaryDirectory:
-    dir: tempfile.TemporaryDirectory  = tempfile.TemporaryDirectory(suffix = "_edgar_repo_1")
-    root: Path = Path(dir.name)
-    for i in YEAR_LIST:
-        subdir: Path = root / str(i)
-        subdir.mkdir()
-    return dir
-
-@pytest.fixture
-def fs_root() -> tempfile.TemporaryDirectory:
-    dir: tempfile.TemporaryDirectory  = tempfile.TemporaryDirectory(suffix = "_edgar_repo_fs")
-    root: Path = Path(dir.name)
-    for i in [DatePeriodType.DAY, DatePeriodType.QUARTER]:
-        subdir: Path = root / str(i)
-        subdir.mkdir()
-        for j in YEAR_LIST:
-            subsubdir: Path = subdir / str(j)
-            subsubdir.mkdir()
-    return dir
-
+from edgar_utils.tests.globals import YEAR_LIST, QUARTER_LIST, FILE_PER_DIR
 
 class TestFileRepoDir(object):
     def test_init_dir_empty(self, dir_empty: tempfile.TemporaryDirectory) -> None:
@@ -80,7 +46,7 @@ class TestFileRepoDir(object):
         dir: FileRepoDir = FileRepoDir(Path(dir_empty.name))
         obj: FileRepoObject = dir.new_object(name)
 
-        assert obj.name == name
+        assert obj.path.name == name
         assert len(dir) == 1
         for (_, o) in dir:
             assert o == obj
@@ -102,12 +68,44 @@ class TestFileRepoDir(object):
         assert path.name == str(max(y for y in YEAR_LIST))
         assert now > timestamp and timestamp > now - timedelta(seconds = 10)
 
-    def test_sorted_objects(self, dir_prepped: tempfile.TemporaryDirectory) -> None:
+    def test_sorted_entities(self, dir_prepped: tempfile.TemporaryDirectory) -> None:
         dir: FileRepoDir = FileRepoDir(Path(dir_prepped.name))
-        objects: List = dir.sorted_objects()
+        objects: List = dir.sorted_entities()
         expected: Iterator = iter(sorted(YEAR_LIST, reverse = True))
         for actual in objects:
             assert actual == str(next(expected))
+
+    def test_max_entity_exists(self, dir_prepped: tempfile.TemporaryDirectory) -> None:
+        dir: FileRepoDir = FileRepoDir(Path(dir_prepped.name))
+        entity: RepoEntity = dir.max_entity()
+        assert entity is not None
+        assert entity.path.name == str(max(YEAR_LIST))
+
+    def test_max_entity_none(self, dir_empty: tempfile.TemporaryDirectory) -> None:
+        dir: FileRepoDir = FileRepoDir(Path(dir_empty.name))
+        assert dir.max_entity() is None
+
+    def test_visit_all_objects(self, fs_root: tempfile.TemporaryDirectory) -> None:
+        dir: FileRepoDir = FileRepoDir(Path(fs_root.name))
+        mock: MagicMock = MagicMock()
+        mock.visit.return_value = True
+        dir.visit(mock)
+        y_len: int = len(YEAR_LIST)
+        y_max: int = max(YEAR_LIST)
+        assert len(mock.mock_calls) == FILE_PER_DIR * 4 * y_len * 2
+
+        i: int = 0
+        for c in mock.mock_calls:
+            assert c[0] == 'visit'
+            assert isinstance(c[1][0], FileRepoObject)
+            p = c[1][0].subpath(4)
+        
+            assert p[0] == "QD"[i // (FILE_PER_DIR * 4 * y_len)]
+            assert p[1] == "{y}".format(y = y_max - (i // (FILE_PER_DIR * 4)) % y_len)
+            assert p[2] == "QTR{q}".format(q = 4 - (i // FILE_PER_DIR) % 4)
+            assert p[3] == "file-{index}.txt".format(index = FILE_PER_DIR - 1 - (i % FILE_PER_DIR))
+            i += 1
+
 
 class TestFileRepoObject(object):
     def test_init(self, dir_prepped: tempfile.TemporaryDirectory, fake: Faker) -> None:
@@ -115,7 +113,7 @@ class TestFileRepoObject(object):
         dir: FileRepoDir = FileRepoDir(Path(dir_prepped.name))
         obj: FileRepoObject = FileRepoObject(dir, name)
 
-        assert obj.name == name
+        assert obj.path.name == name
         assert obj.parent == dir
         assert not obj.exists()
         assert name in dir.children
@@ -165,7 +163,7 @@ class TestFileRepoObject(object):
         obj.write_content(input, override=True)
 
         assert obj.exists()
-        assert obj.name == name
+        assert obj.path.name == name
         with open(obj.path, "r") as f:
             assert ''.join(input.__iter__.return_value) == f.read()
 

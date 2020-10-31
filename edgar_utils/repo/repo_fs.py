@@ -32,11 +32,3 @@ class RepoFS(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def years(self, period_type: DatePeriodType) -> List[int]:
         pass
-
-    @abc.abstractmethod
-    def push(self, remote_repo: 'RepoFS') -> None:
-        pass
-
-    @abc.abstractmethod
-    def pull(self, remote_repo: 'RepoFS') -> None:
-        pass

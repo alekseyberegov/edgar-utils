@@ -40,7 +40,6 @@ class TestDatePeriod(object):
             date_period.expand_to_quarter()
 
 class TestDate(object):
-
     @pytest.mark.parametrize("date_str", [
         ("2020-10-25"),
         ("2020-01-01"),
@@ -52,6 +51,24 @@ class TestDate(object):
     def test_init_bad_format(self):
         with pytest.raises(ValueError):
             date_obj = Date("XXX")  
+
+    @pytest.mark.parametrize("date_str, format_spec, expected_result", [
+        ("2020-01-01", "QTR{q}", "QTR1"),
+        ("2020-12-20", "QTR{q}", "QTR4"),
+        ("2020-03-20", "{m:02}", "03"),
+        ("2020-12-20", "{m:02}", "12"),
+        ("2020-03-01", "{d:02}", "01"),
+        ("2020-12-20", "{d:02}", "20"),
+        ("2020-12-20", "{y}", "2020"),
+        ("2020-11-20", "{m}", "11"),
+        ("2020-03-20", "{m}", "3"),
+        ("2020-03-07", "{d}", "7"),
+        ("2020-03-07", "{y}-{m:02}-{d:02}", "2020-03-07"),
+        ("2020-11-18", "{y}-{m:02}-{d:02}", "2020-11-18"),
+    ])
+    def test_format(self, date_str: str, format_spec: str, expected_result: str) -> None:
+        date_obj = Date(date_str)
+        assert date_obj.format(format_spec) == expected_result
 
     @pytest.mark.parametrize("date_str, expected_result", [
         ("2020-01-01", 1),

@@ -89,6 +89,33 @@ class Date(object):
         date_obj.date_inst = date_inst
         return date_obj
 
+    def format(self, format_spec: str) -> str:
+        """
+            Formats the date according to the given specification
+
+            Parameters
+            ----------
+            format_spec: str
+                the formatting specification. Available macros are
+                    - {q} for the quarter
+                    - {d} for the day number
+                    - {m} for the month number
+                    - {y} for the 4-digit year number
+
+            see https://docs.python.org/3/library/string.html#string-formatting
+            
+            Return
+            ------
+            str
+                the formatted date
+        """
+        return format_spec.format(
+            q = self.quarter(),
+            y = self.date_inst.year,
+            m = self.date_inst.month,
+            d = self.date_inst.day
+        )
+
     def __eq__(self, o: object) -> bool:
         another: Date = o
         return another.date_inst == self.date_inst
@@ -141,7 +168,7 @@ class Date(object):
             Return
             ------
             int
-                the number of days between this and from_date dates
+                the number of days between this and from_date dates including this date
         """
         delta: timedelta = self.date_inst - from_date.date_inst
         return delta.days + 1
