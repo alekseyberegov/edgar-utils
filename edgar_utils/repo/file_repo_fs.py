@@ -1,8 +1,13 @@
+from sys import path
 from edgar_utils.repo.repo_fs import RepoDir, RepoObject, RepoFS, RepoEntity
 from edgar_utils.date.date_utils import Date, DatePeriodType
-
+from edgar_utils.date.holidays import USHoliday
 from pathlib import Path
-from typing import Dict, Generator, Iterator, Tuple, List
+from datetime import date
+from typing import Dict, Generator, Iterator, Tuple, List, Union
+from parse import parse
+from calendar import monthrange
+
 import tempfile, os, datetime, abc
 
 class FileLocked(Exception):
@@ -143,24 +148,98 @@ class FileRepoDirVisitor(metaclass=abc.ABCMeta):
         pass
 
 
+class FileObjectLocator(object):
+    def __init__(self, path: Union[str, List[str]]) -> None:
+        self.path = path if isinstance(path, List) else path.split(os.path.sep)
+
+    @staticmethod
+    def from_object(obj: FileRepoObject) -> 'FileObjectLocator':
+        return FileObjectLocator(obj.subpath(4))
+
+    @staticmethod
+    def from_date(date_period: DatePeriodType, the_date: Date, objectname_spec: str) -> 'FileObjectLocator':
+        d = the_date.__the_date
+        path: List[str] = [
+            str(date_period),
+            str(d.year),
+            str(the_date.quarter()),
+            objectname_spec.format(y = d.year, m = d.month, d = d.day)
+        ]
+        return FileObjectLocator(path)
+
+    def __str__(self) -> str:
+        return os.path.sep.join(self.path)
+
+    def __getitem__(self, key):
+        return self.path[int(key)]
+
+    def __iter__(self):
+        return iter(self.path)
+
+    def year(self) -> int:
+        return int(self.path[1])
+
+    def quarter(self) -> int:
+        return int(self.path[2][3])
+
+    def date_period(self) -> DatePeriodType:
+        return DatePeriodType.from_string(self.path[0])
+
+    def date_object(self, objectname_spec: str) -> Date:
+        params = parse(objectname_spec, self.path[3])
+        return Date(date(int(params['y']), int(params['m']),int(params['d'])))
+
+    
 class FileRepoFS(RepoFS, FileRepoDirVisitor):
-    DEFAULT_FROM_DATE: Date = Date("2010-01-01")
-
-    def __init__(self, dir: Path, from_date: Date = DEFAULT_FROM_DATE) -> None:
-        self.from_date = from_date
-        self.indices: Dict[str, FileRepoObject] = {}
-
+    def __init__(self, dir: Path) -> None:
         self.root : FileRepoDir = FileRepoDir(dir)
-        self.root.new_dir(str(DatePeriodType.DAY))
-        self.root.new_dir(str(DatePeriodType.QUARTER))
+        self.indices: Dict[str, FileRepoObject] = {}
 
     def list_years(self, period_type: DatePeriodType) -> List[int]:
         return [int(name) for (name, _) in self.root[str(period_type)]]
 
-    def missing(self, to_date: Date, objectname_spec: str) -> List[str]:
-        pass
+    def missing(self, from_date: Date, to_date: Date, objectname_spec: Dict[str,str]) -> List[str]:
+        missed: List[str] = []
+        self.run_indexing()
 
-    def new_object(self, relative_path: str, objectname: str) -> RepoObject:
+        y: int = 0
+        q: int = 0
+        d: Date = from_date.copy()
+        holidays: USHoliday = None
+        for i in range(to_date.diff_days(from_date)):
+            (c_y, c_q, _, _, _) = d.parts()
+            if c_y != y:
+                holidays = USHoliday(c_y)
+                q = 0
+                y = c_y
+
+            if c_q != q:
+                loc: str = str(FileObjectLocator.from_date(
+                    DatePeriodType.QUARTER, d, objectname_spec[str(DatePeriodType.QUARTER)]))
+                if loc not in self.indices:
+                    missed.append(loc)
+                q = c_y
+
+            if not (d.is_weekend() or d in holidays):
+                loc: str = str(FileObjectLocator.from_date(
+                    DatePeriodType.DAY, d, objectname_spec[str(DatePeriodType.DAY)]))
+                if loc not in self.indices:
+                    missed.append(loc)
+            d += 1
+
+        return missed
+
+    def get_object(self, rel_path: str) -> RepoObject:
+        loc: FileObjectLocator = FileObjectLocator(rel_path)
+        e: RepoEntity = self.root
+        for i in loc:
+            if i in e:
+                e = e[i]
+            else:
+               return None
+        return e
+
+    def new_object(self, rel_path: str, objectname: str) -> RepoObject:
         pass
 
     def run_indexing(self) -> None:
@@ -168,6 +247,6 @@ class FileRepoFS(RepoFS, FileRepoDirVisitor):
         self.root.visit(self)
 
     def visit(self, object: FileRepoObject) -> bool:
-        key = os.path.sep.join(object.subpath(4))
-        self.indices[key] = object
+        loc: FileObjectLocator = FileObjectLocator.from_object(object)
+        self.indices[str(loc)] = object
         return True

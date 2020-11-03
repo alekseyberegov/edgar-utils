@@ -69,11 +69,11 @@ class USHoliday(object):
             self.list.append(d)
 
         for i in self.list:
-            wd: int = i.date_inst.isoweekday()
+            wd: int = i.isoweekday()
             if wd == self.SATURDAY:
-                i.add_days(-1)
+                i += -1
             elif wd == self.SUNDAY:
-                i.add_days(1)
+                i += 1
 
     def __iter__(self):
         return iter(self.list)

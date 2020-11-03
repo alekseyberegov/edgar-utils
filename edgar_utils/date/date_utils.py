@@ -32,9 +32,9 @@ class DatePeriod(object):
     def expand_to_quarter(self) -> 'DatePeriod':
         (qbeg, qend) = self.start_date.quarter_dates()
 
-        if self.end_date.date_inst > qend.date_inst:
+        if self.end_date > qend:
             raise DatePeriodException("Can't fit into one quarter: {0} is greater than {1}"
-                .format(self.end_date.date_inst,qend.date_inst))
+                .format(str(self.end_date), str(qend)))
 
         self.start_date = qbeg
         self.end_date = qend
@@ -45,8 +45,8 @@ class DatePeriod(object):
 
     def __str__(self) -> str:
         return str(self.period_type) \
-            + "," + str(self.start_date.date_inst) \
-            + "," + str(self.end_date.date_inst) 
+            + "," + str(self.start_date) \
+            + "," + str(self.end_date) 
 
     @staticmethod
     def from_string(serialized: str) -> 'DatePeriod':
@@ -66,10 +66,10 @@ class Date(object):
             the_date : str | datetime.date
                 The date string in YYYY-MM-DD format or the date object
         """
-        self.date_inst = date.fromisoformat(the_date) if isinstance(the_date, str) else the_date
+        self.__the_date = date.fromisoformat(the_date) if isinstance(the_date, str) else the_date
 
     @staticmethod
-    def from_date(date_inst: date) -> 'Date':
+    def from_date(the_date: date) -> 'Date':
         """
             Create Edgar Date object from a date instance
 
@@ -83,7 +83,7 @@ class Date(object):
             Date
                 the Edgar Date instance
         """
-        return Date(date_inst)
+        return Date(the_date)
 
     def format(self, format_spec: str) -> str:
         """
@@ -107,9 +107,18 @@ class Date(object):
         """
         return format_spec.format(
             q = self.quarter(),
-            y = self.date_inst.year,
-            m = self.date_inst.month,
-            d = self.date_inst.day
+            y = self.__the_date.year,
+            m = self.__the_date.month,
+            d = self.__the_date.day
+        )
+
+    def parts(self) -> Tuple[int, int, int, int, int, int]:
+        return (
+            self.year(),
+            self.quarter(),
+            self.__the_date.month,
+            self.__the_date.day,
+            self.isoweekday()
         )
 
     def __eq__(self, o: object) -> bool:
@@ -121,7 +130,30 @@ class Date(object):
                 o: Date
                     the other date with which this date will be compared
         """
-        return isinstance(o, Date) and o.date_inst == self.date_inst
+        return isinstance(o, Date) and o.__the_date == self.__the_date
+
+    def __lt__(self, o: object) -> bool:
+        # Less than	p1 < p2                     p1.__lt__(p2)
+        return isinstance(o, Date) and self.__the_date < o.__the_date
+
+    def __le__(self, o: object) -> bool:
+        # Less than or equal to                 p1 <= p2 p1.__le__(p2)        
+        return isinstance(o, Date) and self.__the_date <= o.__the_date
+    
+    def __ne__(self, o: object) -> bool:
+        # Not equal to	p1 != p2                p1.__ne__(p2)
+        return isinstance(o, Date) and self.__the_date != o.__the_date
+
+    def __gt__(self, o: object) -> bool:
+        # Greater than	p1 > p2                 p1.__gt__(p2)
+        return isinstance(o, Date) and self.__the_date > o.__the_date
+
+    def __ge__(self, o: object) -> bool:
+        # Greater than or equal to p1 >= p2     p1.__ge__(p2)
+        return isinstance(o, Date) and self.__the_date >= o.__the_date
+
+    def __iadd__(self, o: object):
+        return self.add_days(days = int(o))
 
     def __str__(self) -> str:
         """
@@ -132,16 +164,30 @@ class Date(object):
             str
                 the string representation of this date object
         """
-        return self.date_inst.__str__()
+        return self.__the_date.__str__()
 
     def quarter(self) -> int:
         """
-            Returns
-            -------
+            Return
+            ------
             int
-                the quarter number 1..4
+                the quarter number between 1 and 4
         """
-        return  (self.date_inst.month - 1) // 3 + 1
+        return  (self.__the_date.month - 1) // 3 + 1
+
+    def year(self) -> int:
+        """
+            Returns the year of the date
+
+            Return
+            ------
+            int
+                the year
+        """
+        return self.__the_date.year
+
+    def isoweekday(self):
+        return self.__the_date.isoweekday()
 
     def diff_quarters(self, from_date: 'Date') -> int:
         """
@@ -173,7 +219,7 @@ class Date(object):
             int
                 the number of days between this and from_date dates including this date
         """
-        delta: timedelta = self.date_inst - from_date.date_inst
+        delta: timedelta = self.__the_date - from_date.__the_date
         return delta.days + 1
 
     def quarter_dates(self) -> Tuple['Date', 'Date']:
@@ -186,8 +232,8 @@ class Date(object):
                 The quarter's start and end dates
         """
         qbegins: date = None
-        for qdate in [date(self.date_inst.year + m // 12, m % 12, 1) for m in QUARTER_START_MONTH]:
-            if self.date_inst < qdate:
+        for qdate in [date(self.__the_date.year + m // 12, m % 12, 1) for m in QUARTER_START_MONTH]:
+            if self.__the_date < qdate:
                 return (Date.from_date(qbegins), Date.from_date(qdate - ONE_DAY))
             qbegins = qdate
 
@@ -219,6 +265,17 @@ class Date(object):
             (qbeg, qend) = qend.add_days(1).quarter_dates()
             yield DatePeriod(DatePeriodType.QUARTER if self == qend else DatePeriodType.DAY, qbeg, self)
                 
+    def copy(self) -> 'Date':
+        """
+            Creates a copy of this Date instance
+
+            Return
+            ------
+            Date
+                the copy of this Date instance
+        """
+        return Date(self.__the_date)
+
     def add_days(self, days: int) -> 'Date':
         """
             Create a new Date that has specified number of days added to this Date
@@ -233,7 +290,7 @@ class Date(object):
             Date
                 the new Date (with added days)
         """
-        self.date_inst = self.date_inst + timedelta(days=days)
+        self.__the_date = self.__the_date + timedelta(days=days)
         return self
         
     def is_weekend(self) -> bool:
@@ -245,11 +302,11 @@ class Date(object):
                 bool
                     True if the current date is weekend; otherwise returns false
         """
-        return self.date_inst.isoweekday() in [6, 7]
+        return self.__the_date.isoweekday() in [6, 7]
 
     def nthday_of_nthweek(self, dayofweek: int, whichweek: int) -> 'Date':
         # get the first day 
-        first: date = date(self.date_inst.year, self.date_inst.month, 1)
+        first: date = date(self.__the_date.year, self.__the_date.month, 1)
         # get first dayofweek of the month
         # the formula is "first + 7 - wd(first - n)"
         wd_date = first + timedelta(days = 7 - (first - timedelta(days=dayofweek)).isoweekday())

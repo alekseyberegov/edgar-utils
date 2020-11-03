@@ -2,13 +2,13 @@ import pytest
 import tempfile
 
 from edgar_utils.repo.repo_fs import RepoEntity
-from edgar_utils.date.date_utils import DatePeriodType
+from edgar_utils.date.date_utils import DatePeriodType, Date
 from typing import Dict, Iterator, List
 from pathlib import Path
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 from faker import Faker
-from edgar_utils.repo.file_repo_fs import FileRepoDir, FileRepoFS, FileRepoObject
+from edgar_utils.repo.file_repo_fs import FileRepoDir, FileRepoFS, FileRepoObject, FileObjectLocator
 from edgar_utils.tests.globals import YEAR_LIST, YEAR_COUNT, YEAR_MAX, FILE_PER_DIR
 
 class TestFileRepoDir(object):
@@ -211,6 +211,54 @@ class TestFileRepoObject(object):
         with pytest.raises(FileNotFoundError):
             for chunk in obj.iter_content(512):
                 assert False
+
+
+class TestFileObjectLocator(object):
+    @pytest.mark.parametrize("path, date_period, quarter, year, date_str", [
+        ('Q/1972/QTR4/master19721213.idx', 'Q', 4, 1972, '1972-12-13'),
+        ('Q/2020/QTR1/master20200105.idx', 'Q', 1, 2020, '2020-01-05'),
+        ('D/2020/QTR1/master20200125.idx', 'D', 1, 2020, '2020-01-25'),
+    ])    
+    def test_init_str(self, path: str, date_period: str, quarter: int, year: int, date_str: str) -> None:
+        loc: FileObjectLocator = FileObjectLocator(path)
+        assert loc.date_period() == DatePeriodType.from_string(date_period)
+        assert loc.year() == year
+        assert loc.quarter() == quarter
+        assert loc.date_object('master{y:04}{m:02}{d:02}.idx') == Date(date_str)
+
+    @pytest.mark.parametrize("path, date_period, quarter, year, date_str", [
+        (['Q','1972','QTR4','master19721213.idx'], 'Q', 4, 1972, '1972-12-13'),
+        (['Q','2020','QTR1','master20200105.idx'], 'Q', 1, 2020, '2020-01-05'),
+        (['D','2020','QTR1','master20200125.idx'], 'D', 1, 2020, '2020-01-25'),
+    ])    
+    def test_init_list(self, path: List[str], date_period: str, quarter: int, year: int, date_str: str) -> None:
+        loc: FileObjectLocator = FileObjectLocator(path)
+        assert loc.date_period() == DatePeriodType.from_string(date_period)
+        assert loc.year() == year
+        assert loc.quarter() == quarter
+        assert loc.date_object('master{y:04}{m:02}{d:02}.idx') == Date(date_str)
+
+    @pytest.mark.parametrize("path, date_period, quarter, year, date_str", [
+        (['Q','1972','QTR4','master19721213.idx'], 'Q', 'QTR4', '1972', '1972-12-13'),
+        (['Q','2020','QTR1','master20200105.idx'], 'Q', 'QTR1', '2020', '2020-01-05'),
+        (['D','2020','QTR1','master20200125.idx'], 'D', 'QTR1', '2020', '2020-01-25'),
+    ])    
+    def test_getitem(self, path:str, date_period: str, quarter: str, year: int, date_str: str) -> None:
+        loc: FileObjectLocator = FileObjectLocator(path)
+        assert loc[0] == date_period
+        assert loc[1] == year
+        assert loc[2] == quarter
+        assert loc[3] == Date(date_str).format('master{y}{m:02}{d:02}.idx')
+
+    @pytest.mark.parametrize("path, expected_result", [
+        (['Q','1972','QTR4','master19721213.idx'], 'Q/1972/QTR4/master19721213.idx'),
+        (['Q','2020','QTR1','master20200105.idx'], 'Q/2020/QTR1/master20200105.idx'),
+        (['D','2020','QTR1','master20200125.idx'], 'D/2020/QTR1/master20200125.idx'),
+    ])  
+    def test_str(self, path: List[str], expected_result: str) -> None:
+        loc: FileObjectLocator = FileObjectLocator(path)
+        assert str(loc) == expected_result
+
 
 class TestFileRepoFS(object):
     def test_list_years(self, fs_root: tempfile.TemporaryDirectory, fake: Faker) -> None:

@@ -197,6 +197,22 @@ class TestDate(object):
         date_new: Date = date_obj.add_days(days)
         assert str(date_new) == expected_result
 
+    @pytest.mark.parametrize("from_date_str, to_date_str, days", [
+        ("2020-01-01", "2020-01-01",  1),
+        ("2020-01-01", "2020-01-20", 20),
+        ("2020-01-01", "2020-01-31", 31),
+        ("2020-01-01", "2020-02-01", 32),
+        ("2020-01-01", "2020-02-02", 33),
+    ])
+    def test_add_days(self, from_date_str: str, to_date_str: str,  days: int) -> None:
+        from_date: Date = Date(from_date_str)
+        to_date: Date = Date(to_date_str)
+        count: int = 0
+        while from_date <= to_date:
+            from_date += 1
+            count += 1
+        assert count == days
+
     @pytest.mark.parametrize("date_str, dayofweek, whichweek, expected_result", [
         ("2020-01-02", 1, 1, "2020-01-06"),
         ("2020-01-02", 2, 1, "2020-01-07"),

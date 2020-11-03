@@ -18,12 +18,12 @@ class TestUSHoliday(object):
     ])
     def test_contains(self, date_str: str, expected_result: bool) -> None:
         date_obj: Date = Date(date_str)
-        holidays: USHoliday = USHoliday(date_obj.date_inst.year)
+        holidays: USHoliday = USHoliday(date_obj.year())
         assert (date_obj in holidays) == expected_result
 
     def test_iterator(self) -> None:
         date_obj: Date = Date("2020-01-01")
-        holidays: USHoliday = USHoliday(date_obj.date_inst.year)
+        holidays: USHoliday = USHoliday(date_obj.year())
         dates: Dict[str, bool] = {}
         for i in holidays:
             dates[str(i)] = True
