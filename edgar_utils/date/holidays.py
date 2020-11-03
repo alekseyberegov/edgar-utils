@@ -1,6 +1,11 @@
-from typing import List, Tuple
+from typing import List, Dict
 from datetime import date
 from edgar_utils.date.date_utils import Date
+
+# https://www.opm.gov/policy-data-oversight/pay-leave/federal-holidays/#url=2020
+# This holiday is designated as "Washington’s Birthday" in section 6103(a) of title 5 of the United States Code, which is the
+# law that specifies holidays for Federal employees. Though other institutions such as state and local governments and private
+# businesses may use other names, it is our policy to always refer to holidays by the names designated in the law.
 
 class USHoliday(object):
     FIRST_WEEK: int = 1
@@ -29,35 +34,39 @@ class USHoliday(object):
 
     def __init__(self, year: int) -> None:
         self.list: List[Date] = []
+        self.names: Dict[str,str] = {}
 
         for i in [
                 # New Year              Jan 1
-                (self.JANUARY, 1),
+                (self.JANUARY, 1, 'New Year''s Day'),
                 # Independence Day      July 4
-                (self.JULY, 4),
+                (self.JULY, 4, 'Independency Day'),
                 # Veterans Day          Nov 11
-                (self.NOVEMBER, 11),
+                (self.NOVEMBER, 11, 'Veterans Day'),
                 # Christmas Day         Dec 25
-                (self.DECEMBER, 25)
+                (self.DECEMBER, 25, 'Christmas Day')
             ]:
             d: Date = Date(date(year, i[0], i[1]))
+            self.names[str(d)] = i[2]
             self.list.append(d)
 
         for i in [
                 # Martin Luther King, Jr.       third Mon in Jan
-                (self.JANUARY, self.MONDAY, self.THIRD_WEEK),
+                (self.JANUARY, self.MONDAY, self.THIRD_WEEK, 'Birthday of Martin Luther King, Jr.'),
                 # Washington's Birthday         third Mon in Feb
-                (self.FEBRUARY, self.MONDAY, self.THIRD_WEEK),
+                (self.FEBRUARY, self.MONDAY, self.THIRD_WEEK, 'Washington''s Birthday'),
                 # Memorial Day                  last Mon in May
-                (self.MAY, self.MONDAY, self.LAST_WEEK),
+                (self.MAY, self.MONDAY, self.LAST_WEEK, 'Memorial Day'),
                 # Labor Day                     first Mon in Sept
-                (self.SEPTEMBER, self.MONDAY, self.FIRST_WEEK),
+                (self.SEPTEMBER, self.MONDAY, self.FIRST_WEEK, 'Labor Day'),
                 # Columbus Day                  second Mon in Oct
-                (self.OCTOBER, self.MONDAY, self.SECOND_WEEK),
+                (self.OCTOBER, self.MONDAY, self.SECOND_WEEK, 'Columbus Day'),
                 # Thanksgiving Day              fourth Thur in Nov
-                (self.NOVEMBER, self.THURSDAY, self.FOURTH_WEEK),
+                (self.NOVEMBER, self.THURSDAY, self.FOURTH_WEEK, 'Thanksgiving Day'),
             ]:
-            self.list.append(Date(date(year, i[0], 1)).nthday_of_nthweek(i[1], i[2]))
+            d: Date = Date(date(year, i[0], 1)).nthday_of_nthweek(i[1], i[2])
+            self.names[str(d)] = i[3]
+            self.list.append(d)
 
         for i in self.list:
             wd: int = i.date_inst.isoweekday()
@@ -69,8 +78,15 @@ class USHoliday(object):
     def __iter__(self):
         return iter(self.list)
 
+    def __len__(self):
+        return len(self.list)
+
     def __contains__(self, key) -> bool:
         return isinstance(key, Date) and key in self.list
+
+    def __lshift__(self, the_date):
+        s: str = str(the_date)
+        return self.names[s] if s in self.names else ''
 
     
 
