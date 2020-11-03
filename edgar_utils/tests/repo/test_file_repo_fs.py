@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 from faker import Faker
 from edgar_utils.repo.file_repo_fs import FileRepoDir, FileRepoFS, FileRepoObject
-from edgar_utils.tests.globals import YEAR_LIST, QUARTER_LIST, FILE_PER_DIR
+from edgar_utils.tests.globals import YEAR_LIST, YEAR_COUNT, YEAR_MAX, FILE_PER_DIR
 
 class TestFileRepoDir(object):
     def test_init_dir_empty(self, dir_empty: tempfile.TemporaryDirectory) -> None:
@@ -90,21 +90,32 @@ class TestFileRepoDir(object):
         mock: MagicMock = MagicMock()
         mock.visit.return_value = True
         dir.visit(mock)
-        y_len: int = len(YEAR_LIST)
-        y_max: int = max(YEAR_LIST)
-        assert len(mock.mock_calls) == FILE_PER_DIR * 4 * y_len * 2
 
         i: int = 0
         for c in mock.mock_calls:
             assert c[0] == 'visit'
             assert isinstance(c[1][0], FileRepoObject)
-            p = c[1][0].subpath(4)
-        
-            assert p[0] == "QD"[i // (FILE_PER_DIR * 4 * y_len)]
-            assert p[1] == "{y}".format(y = y_max - (i // (FILE_PER_DIR * 4)) % y_len)
-            assert p[2] == "QTR{q}".format(q = 4 - (i // FILE_PER_DIR) % 4)
-            assert p[3] == "file-{index}.txt".format(index = FILE_PER_DIR - 1 - (i % FILE_PER_DIR))
+            assert c[1][0].subpath(4) == [
+                "QD"[i // (FILE_PER_DIR * 4 * YEAR_COUNT)],
+                "{year}".format(year = YEAR_MAX - (i // (FILE_PER_DIR * 4)) % YEAR_COUNT),
+                "QTR{quarter}".format(quarter = 4 - (i // FILE_PER_DIR) % 4),
+                "file-{file}.txt".format(file = FILE_PER_DIR - (i % FILE_PER_DIR) - 1)
+            ]
             i += 1
+
+        assert len(mock.mock_calls) == FILE_PER_DIR * 4 * YEAR_COUNT * 2
+
+    def test_visit_one_object(self, fs_root: tempfile.TemporaryDirectory) -> None:
+        dir: FileRepoDir = FileRepoDir(Path(fs_root.name))
+        mock: MagicMock = MagicMock()
+        mock.visit.return_value = False
+        dir.visit(mock)
+        
+        c = mock.mock_calls[0]
+        assert c[0] == 'visit'
+        assert isinstance(c[1][0], FileRepoObject)
+        assert c[1][0].subpath(4) == ['Q', str(YEAR_MAX), 'QTR4', 'file-2.txt']
+        assert len(mock.mock_calls) == 1
 
 
 class TestFileRepoObject(object):
@@ -202,10 +213,10 @@ class TestFileRepoObject(object):
                 assert False
 
 class TestFileRepoFS(object):
-    def test_years(self, fs_root: tempfile.TemporaryDirectory, fake: Faker) -> None:
+    def test_list_years(self, fs_root: tempfile.TemporaryDirectory, fake: Faker) -> None:
         fs: FileRepoFS = FileRepoFS(Path(fs_root.name))
         for j in [DatePeriodType.DAY, DatePeriodType.QUARTER]:
-            years: List[int] = fs.years(j)
+            years: List[int] = fs.list_years(j)
             assert max(years) == max(YEAR_LIST)
             for i in YEAR_LIST:
                 assert i in years

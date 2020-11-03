@@ -1,6 +1,6 @@
 from datetime import date, datetime, timedelta
 
-from typing import List, Set, Dict, Tuple, Optional, Generator
+from typing import List, Set, Dict, Tuple, Optional, Generator, Union
 from enum import IntEnum
 
 ONE_DAY: timedelta = timedelta(days=1)
@@ -11,8 +11,7 @@ class DatePeriodType(IntEnum):
     QUARTER = 2
 
     def __str__(self):
-        i: int = int(self.value)
-        return "DQ"[i - 1 : i]
+        return "DQ"[self.value - 1]
 
     @staticmethod
     def from_string(code: str) -> 'DatePeriodType':
@@ -60,15 +59,14 @@ class Date(object):
         A date class that provides a number of useful methods to track financial fillings
     """
   
-    def __init__(self, date_str: str) -> None:
+    def __init__(self, the_date: Union[str, date]) -> None:
         """
             Parameters
             ----------
-            date_str : str
-                The date string in YYYY-MM-DD format
+            the_date : str | datetime.date
+                The date string in YYYY-MM-DD format or the date object
         """
-        self.date_inst = date.fromisoformat(date_str) if date_str != None else None
-        super().__init__()
+        self.date_inst = date.fromisoformat(the_date) if isinstance(the_date, str) else the_date
 
     @staticmethod
     def from_date(date_inst: date) -> 'Date':
@@ -85,9 +83,7 @@ class Date(object):
             Date
                 the Edgar Date instance
         """
-        date_obj = Date(None)
-        date_obj.date_inst = date_inst
-        return date_obj
+        return Date(date_inst)
 
     def format(self, format_spec: str) -> str:
         """
@@ -117,8 +113,15 @@ class Date(object):
         )
 
     def __eq__(self, o: object) -> bool:
-        another: Date = o
-        return another.date_inst == self.date_inst
+        """
+            Check whether two dates are equal
+
+            Parameters
+            ----------
+                o: Date
+                    the other date with which this date will be compared
+        """
+        return isinstance(o, Date) and o.date_inst == self.date_inst
 
     def __str__(self) -> str:
         """
@@ -175,7 +178,7 @@ class Date(object):
 
     def quarter_dates(self) -> Tuple['Date', 'Date']:
         """
-            Returns a quater to which the Date belongs
+            Returns a quater in terms of start and end dates to which the Date belongs
 
             Return
             ------
@@ -230,4 +233,29 @@ class Date(object):
             Date
                 the new Date (with added days)
         """
-        return Date.from_date(self.date_inst + timedelta(days))
+        self.date_inst = self.date_inst + timedelta(days=days)
+        return self
+        
+    def is_weekend(self) -> bool:
+        """
+            Indicates whether the current date is weekend
+
+            Return
+            ------
+                bool
+                    True if the current date is weekend; otherwise returns false
+        """
+        return self.date_inst.isoweekday() in [6, 7]
+
+    def nthday_of_nthweek(self, dayofweek: int, whichweek: int) -> 'Date':
+        # get the first day 
+        first: date = date(self.date_inst.year, self.date_inst.month, 1)
+        # get first dayofweek of the month
+        # the formula is "first + 7 - wd(first - n)"
+        wd_date = first + timedelta(days = 7 - (first - timedelta(days=dayofweek)).isoweekday())
+        the_date = wd_date + timedelta(days=(whichweek - 1) * 7)
+
+        if the_date >= date(first.year + (first.month + 1) // 12, first.month % 12 + 1, 1):
+            the_date -= timedelta(7)
+
+        return Date.from_date(the_date)

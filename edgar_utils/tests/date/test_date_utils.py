@@ -196,3 +196,39 @@ class TestDate(object):
         date_obj: Date = Date(date_str)
         date_new: Date = date_obj.add_days(days)
         assert str(date_new) == expected_result
+
+    @pytest.mark.parametrize("date_str, dayofweek, whichweek, expected_result", [
+        ("2020-01-02", 1, 1, "2020-01-06"),
+        ("2020-01-02", 2, 1, "2020-01-07"),
+        ("2020-01-02", 3, 1, "2020-01-01"),
+        ("2020-01-02", 4, 1, "2020-01-02"),
+        ("2020-01-01", 5, 1, "2020-01-03"),
+        ("2020-01-01", 6, 1, "2020-01-04"),
+        ("2020-01-01", 7, 1, "2020-01-05"),
+        ("2020-01-01", 1, 2, "2020-01-13"),
+        ("2020-01-01", 2, 2, "2020-01-14"),
+        ("2020-01-01", 3, 2, "2020-01-08"),
+        ("2020-01-02", 4, 2, "2020-01-09"),
+        ("2020-01-02", 5, 2, "2020-01-10"),
+        ("2020-01-02", 6, 2, "2020-01-11"),
+        ("2020-01-01", 7, 2, "2020-01-12"),
+        ("2020-01-01", 1, 4, "2020-01-27"),
+        ("2020-01-01", 4, 5, "2020-01-30"),
+        ("2020-01-01", 1, 5, "2020-01-27"),
+        ("2020-12-13", 1, 5, "2020-12-28"),
+    ])
+    def test_nthday_of_nthweek(self, date_str: str, dayofweek: int, whichweek: int, expected_result: str) -> None:
+        date_obj: Date = Date(date_str)
+        date_new: Date = date_obj.nthday_of_nthweek(dayofweek=dayofweek, whichweek=whichweek)
+        assert str(date_new) == expected_result
+
+    @pytest.mark.parametrize("date_str, expected_result", [
+        ("2020-01-01", False),
+        ("2020-02-02", True),
+        ("2020-03-28", True),
+    ]) 
+    def is_weekend(self, date_str: str, expected_result: bool) -> None:
+        date_obj: Date = Date(date_str)
+        assert date_obj.is_weekend() == expected_result
+
+

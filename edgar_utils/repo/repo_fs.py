@@ -4,7 +4,9 @@ from typing import Tuple, Iterator, Generator, List
 from edgar_utils.date.date_utils import Date, DatePeriodType
 
 class RepoEntity(metaclass=abc.ABCMeta):
-    pass
+    @abc.abstractmethod
+    def exists(self) -> bool:
+        pass
 
 class RepoObject(RepoEntity, metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -15,11 +17,11 @@ class RepoObject(RepoEntity, metaclass=abc.ABCMeta):
     def write_content(self, iter: Iterator, override: bool = False) -> None:
         pass
 
-class RepoDir(RepoEntity, metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def exists(self) -> bool:
+    def subpath(self, levels: int) -> List[str]:
         pass
 
+class RepoDir(RepoEntity, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def new_object(self, name: str) -> RepoObject:
         pass
@@ -30,5 +32,5 @@ class RepoDir(RepoEntity, metaclass=abc.ABCMeta):
 
 class RepoFS(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def years(self, period_type: DatePeriodType) -> List[int]:
+    def list_years(self, period_type: DatePeriodType) -> List[int]:
         pass

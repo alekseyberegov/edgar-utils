@@ -3,9 +3,7 @@ from edgar_utils.date.date_utils import Date, DatePeriodType
 
 from pathlib import Path
 from typing import Dict, Generator, Iterator, Tuple, List
-import tempfile, os, datetime
-from unittest.mock import MagicMock
-import abc
+import tempfile, os, datetime, abc
 
 class FileLocked(Exception):
     """File is already locked."""
@@ -24,15 +22,16 @@ class FileRepoDir(RepoDir):
             parent[self.path.name] = self
 
         self.children : Dict[str,RepoEntity] = {}
-
         self.refresh()
+
         if not self.path.exists():
             self.path.mkdir()
     
     def refresh(self) -> None:
         if self.path.exists():
             for e in self.path.iterdir():
-                self[e.name] = FileRepoDir(e, self) if e.is_dir() else FileRepoObject(self, e.name)
+                if e.name not in self:
+                    self[e.name] = FileRepoDir(e, self) if e.is_dir() else FileRepoObject(self, e.name)
 
     def __iter__(self):
         return iter(self.children.items())
@@ -43,15 +42,15 @@ class FileRepoDir(RepoDir):
     def __contains__(self, key):
         return key in self.children
 
-    def exists(self) -> bool:
-        return self.path.exists()
-
     def __getitem__(self, key):
         val = self.children[key]
         return val
 
     def __setitem__(self, key, val):
         self.children[key] = val
+
+    def exists(self) -> bool:
+        return self.path.exists()
 
     def new_object(self, name: str) -> RepoObject:
         return FileRepoObject(self, name)
@@ -96,7 +95,6 @@ class FileRepoDir(RepoDir):
         return True
 
 
-
 class FileRepoObject(RepoObject):
     def __init__(self, parent: FileRepoDir, name: str) -> None:
         self.path: Path = parent.path / name
@@ -136,9 +134,7 @@ class FileRepoObject(RepoObject):
         return self.path.exists()
 
     def __eq__(self, o: object) -> bool:
-        if not isinstance(o, FileRepoObject):
-            return False
-        return self.path == o.path
+       return isinstance(o, FileRepoObject) and self.path == o.path
 
 
 class FileRepoDirVisitor(metaclass=abc.ABCMeta):
@@ -147,20 +143,31 @@ class FileRepoDirVisitor(metaclass=abc.ABCMeta):
         pass
 
 
-class FileRepoFS(RepoFS):
-    DEFAULT_START_DATE: Date = Date("2010-01-01")
+class FileRepoFS(RepoFS, FileRepoDirVisitor):
+    DEFAULT_FROM_DATE: Date = Date("2010-01-01")
 
-    def __init__(self, dir: Path, start_date: Date = DEFAULT_START_DATE) -> None:
-        self.start_date = start_date
+    def __init__(self, dir: Path, from_date: Date = DEFAULT_FROM_DATE) -> None:
+        self.from_date = from_date
+        self.indices: Dict[str, FileRepoObject] = {}
+
         self.root : FileRepoDir = FileRepoDir(dir)
         self.root.new_dir(str(DatePeriodType.DAY))
         self.root.new_dir(str(DatePeriodType.QUARTER))
 
-    def years(self, period_type: DatePeriodType) -> List[int]:
+    def list_years(self, period_type: DatePeriodType) -> List[int]:
         return [int(name) for (name, _) in self.root[str(period_type)]]
 
-    def last_object(self, period_type: DatePeriodType) -> Date:
-        years: FileRepoDir = self.root[str(period_type)]
+    def missing(self, to_date: Date, objectname_spec: str) -> List[str]:
+        pass
 
-        return self.start_date
-        
+    def new_object(self, relative_path: str, objectname: str) -> RepoObject:
+        pass
+
+    def run_indexing(self) -> None:
+        self.indices.clear()
+        self.root.visit(self)
+
+    def visit(self, object: FileRepoObject) -> bool:
+        key = os.path.sep.join(object.subpath(4))
+        self.indices[key] = object
+        return True
