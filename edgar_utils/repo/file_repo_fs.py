@@ -6,7 +6,6 @@ from pathlib import Path
 from datetime import date
 from typing import Dict, Generator, Iterator, Tuple, List, Union
 from parse import parse
-from calendar import monthrange
 
 import tempfile, os, datetime, abc
 
@@ -85,8 +84,14 @@ class FileRepoDir(RepoDir):
     def sorted_entities(self) -> List[str]:
         return sorted([name for (name, _) in self], reverse = True) if len(self) > 0 else []
 
-    def max_entity(self) -> RepoEntity:            
-        return self[max([name for (name, _) in self])] if len(self) > 0 else None
+    def get(self, path_list: List[str]) -> RepoEntity:
+        o = self
+        for i in path_list:
+            if i in o:
+                o = o[i]
+            else:
+                return None
+        return o
 
     def visit(self, visitor: 'FileRepoDirVisitor') -> None:
         for name in self.sorted_entities():
@@ -99,6 +104,13 @@ class FileRepoDir(RepoDir):
                     return False
         return True
 
+    def subpath(self, levels: int) -> List[str]:
+        p: List[str] = []
+        o: RepoEntity = self
+        for _ in range(levels):
+            p.insert(0, o.path.name)
+            o = o.parent
+        return p
 
 class FileRepoObject(RepoObject):
     def __init__(self, parent: FileRepoDir, name: str) -> None:
@@ -118,7 +130,8 @@ class FileRepoObject(RepoObject):
         file: Path = self.path if not override else self.path.with_suffix('.new')
         
         open_flags = (os.O_CREAT | os.O_EXCL | os.O_RDWR)
-        open_mode = 0o644
+        open_mode  = 0o644
+
         handle = os.open(file, open_flags, open_mode)
         with os.fdopen(handle, "w") as f:
             for bytes in iter:
@@ -128,11 +141,8 @@ class FileRepoObject(RepoObject):
             file.rename(self.path)
 
     def subpath(self, levels: int) -> List[str]:
-        p: List[str] = []
-        o: RepoEntity = self
-        for _ in range(levels):
-            p.insert(0, o.path.name)
-            o = o.parent
+        p: List[str] = self.parent.subpath(levels - 1) if levels > 1 else []
+        p.append(self.path.name)
         return p
 
     def exists(self) -> bool:
@@ -140,6 +150,9 @@ class FileRepoObject(RepoObject):
 
     def __eq__(self, o: object) -> bool:
        return isinstance(o, FileRepoObject) and self.path == o.path
+
+    def __str__(self) -> str:
+        return str(self.path)
 
 
 class FileRepoDirVisitor(metaclass=abc.ABCMeta):
@@ -149,15 +162,53 @@ class FileRepoDirVisitor(metaclass=abc.ABCMeta):
 
 
 class FileObjectLocator(object):
+    """
+        Locate a file object in a repo FS
+
+        Parameters
+        ----------
+        path: Union[str,List[str]]
+            a relative path as a string or in a form of a list for individuals path elements
+    """
     def __init__(self, path: Union[str, List[str]]) -> None:
         self.path = path if isinstance(path, List) else path.split(os.path.sep)
 
     @staticmethod
-    def from_object(obj: FileRepoObject) -> 'FileObjectLocator':
+    def locate(obj: FileRepoObject) -> 'FileObjectLocator':
+        """
+            Get a locator for the given repo object
+
+            Parameters
+            ----------
+            obj: FileRepoObject
+                the repo object for which a locator will be returned
+
+            Returns
+            -------
+            FileObjectLocator
+                the locator for the given repo object
+        """
         return FileObjectLocator(obj.subpath(4))
 
     @staticmethod
     def from_date(date_period: DatePeriodType, the_date: Date, objectname_spec: str) -> 'FileObjectLocator':
+        """
+            Get a locator for the given date using the provided file name specification
+
+            Parameters
+            ----------
+            date_period: DatePeriodType
+                the date period: day or quarter
+            the_date: Date
+                the date
+            objectname_spec: str
+                the object name specification
+
+            Returns
+            -------
+            FileObjectLocator
+                the locator
+        """
         d = the_date.__the_date
         path: List[str] = [
             str(date_period),
@@ -247,6 +298,6 @@ class FileRepoFS(RepoFS, FileRepoDirVisitor):
         self.root.visit(self)
 
     def visit(self, object: FileRepoObject) -> bool:
-        loc: FileObjectLocator = FileObjectLocator.from_object(object)
+        loc: FileObjectLocator = FileObjectLocator.locate(object)
         self.indices[str(loc)] = object
         return True

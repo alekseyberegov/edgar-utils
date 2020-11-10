@@ -1,5 +1,6 @@
 import pytest
 import tempfile
+import os
 
 from edgar_utils.repo.repo_fs import RepoEntity
 from edgar_utils.date.date_utils import DatePeriodType, Date
@@ -75,15 +76,26 @@ class TestFileRepoDir(object):
         for actual in objects:
             assert actual == str(next(expected))
 
-    def test_max_entity_exists(self, dir_prepped: tempfile.TemporaryDirectory) -> None:
-        dir: FileRepoDir = FileRepoDir(Path(dir_prepped.name))
-        entity: RepoEntity = dir.max_entity()
-        assert entity is not None
-        assert entity.path.name == str(max(YEAR_LIST))
+    @pytest.mark.parametrize("path_list, expected_result", [
+        (['Q', '2020', 'QTR1', 'file-0.txt'],  'Q/2020/QTR1/file-0.txt' ),
+        (['Q', '2020', 'QTR3', 'file-1.txt'],  'Q/2020/QTR3/file-1.txt' ),
+    ])
+    def test_get_success(self, fs_root: tempfile.TemporaryDirectory, path_list: List[str], expected_result: str):
+        root: Path = Path(fs_root.name)
+        dir: FileRepoDir = FileRepoDir(root)
+        obj: FileRepoObject = dir.get(path_list)
+        assert  root / expected_result == obj.path
 
-    def test_max_entity_none(self, dir_empty: tempfile.TemporaryDirectory) -> None:
-        dir: FileRepoDir = FileRepoDir(Path(dir_empty.name))
-        assert dir.max_entity() is None
+    @pytest.mark.parametrize("path_list", [
+        (['Q', '2200', 'QTR1', 'file-0.txt']),
+        (['Q', '2020', 'QTR3', 'file-9.txt']),
+    ])
+    def test_get_failure(self, fs_root: tempfile.TemporaryDirectory, path_list: List[str]):
+        root: Path = Path(fs_root.name)
+        dir: FileRepoDir = FileRepoDir(root)
+        obj: FileRepoObject = dir.get(path_list)
+        assert  obj is None
+
 
     def test_visit_all_objects(self, fs_root: tempfile.TemporaryDirectory) -> None:
         dir: FileRepoDir = FileRepoDir(Path(fs_root.name))
@@ -238,6 +250,16 @@ class TestFileObjectLocator(object):
         assert loc.quarter() == quarter
         assert loc.date_object('master{y:04}{m:02}{d:02}.idx') == Date(date_str)
 
+    @pytest.mark.parametrize("path_list, expected_result", [
+        (['Q', '2020', 'QTR1', 'file-1.txt'], 'Q/2020/QTR1/file-1.txt'),
+        (['Q', '2020', 'QTR3', 'file-2.txt'], 'Q/2020/QTR3/file-2.txt'),
+    ])    
+    def test_locate(self,  fs_root: tempfile.TemporaryDirectory, path_list: List[str], expected_result: str):
+        root: Path = Path(fs_root.name)
+        dir: FileRepoDir = FileRepoDir(root)
+        loc: FileObjectLocator = FileObjectLocator.locate(dir.get(path_list))
+        assert str(loc) == expected_result
+        
     @pytest.mark.parametrize("path, date_period, quarter, year, date_str", [
         (['Q','1972','QTR4','master19721213.idx'], 'Q', 'QTR4', '1972', '1972-12-13'),
         (['Q','2020','QTR1','master20200105.idx'], 'Q', 'QTR1', '2020', '2020-01-05'),
