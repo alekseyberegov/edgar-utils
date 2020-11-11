@@ -19,3 +19,7 @@ QUARTER_LIST: List[str] = ['QTR1', 'QTR2', 'QTR3', 'QTR4']
 """
 FILE_PER_DIR = 3
 
+"""
+    The list of year/quarter to simulate EDGAR index repository
+"""
+EDGAR_QUARTER: List[str] = ['2017-QTR4-92', '2018-QTR1-25']

@@ -193,7 +193,7 @@ class FileObjectLocator(object):
     @staticmethod
     def from_date(date_period: DatePeriodType, the_date: Date, objectname_spec: str) -> 'FileObjectLocator':
         """
-            Get a locator for the given date using the provided file name specification
+            Get a locator for the given date using the provided name specification
 
             Parameters
             ----------
@@ -209,7 +209,7 @@ class FileObjectLocator(object):
             FileObjectLocator
                 the locator
         """
-        d = the_date.__the_date
+        d : Date = the_date.__the_date
         path: List[str] = [
             str(date_period),
             str(d.year),
@@ -231,23 +231,55 @@ class FileObjectLocator(object):
         return int(self.path[1])
 
     def quarter(self) -> int:
+        """
+            Returns the quarter number of an object identfied by the locator
+
+            Returns
+            -------
+            int
+                the quarter number
+        """
         return int(self.path[2][3])
 
     def date_period(self) -> DatePeriodType:
+        """
+            Returns the date period of am object identified by the locator
+
+            Returns
+            -------
+            DatePeriodType
+                the date period: quarter or day
+        """
         return DatePeriodType.from_string(self.path[0])
 
-    def date_object(self, objectname_spec: str) -> Date:
+    def date(self, objectname_spec: str) -> Date:
+        """
+            Returns the date of the locator
+
+            Returns
+            -------
+            Date
+                the date
+        """
         params = parse(objectname_spec, self.path[3])
         return Date(date(int(params['y']), int(params['m']),int(params['d'])))
 
     
 class FileRepoFS(RepoFS, FileRepoDirVisitor):
     def __init__(self, dir: Path) -> None:
-        self.root : FileRepoDir = FileRepoDir(dir)
-        self.indices: Dict[str, FileRepoObject] = {}
+        self.__root : FileRepoDir = FileRepoDir(dir)
+        self.__indices: Dict[str, FileRepoObject] = {}
 
     def list_years(self, period_type: DatePeriodType) -> List[int]:
-        return [int(name) for (name, _) in self.root[str(period_type)]]
+        """
+            List years available in the repo
+
+            Returns
+            -------
+            List[int]
+                a list of year numbers
+        """
+        return [int(name) for (name, _) in self.__root[str(period_type)]]
 
     def missing(self, from_date: Date, to_date: Date, objectname_spec: Dict[str,str]) -> List[str]:
         missed: List[str] = []
@@ -267,22 +299,30 @@ class FileRepoFS(RepoFS, FileRepoDirVisitor):
             if c_q != q:
                 loc: str = str(FileObjectLocator.from_date(
                     DatePeriodType.QUARTER, d, objectname_spec[str(DatePeriodType.QUARTER)]))
-                if loc not in self.indices:
+                if loc not in self.__indices:
                     missed.append(loc)
                 q = c_y
 
             if not (d.is_weekend() or d in holidays):
                 loc: str = str(FileObjectLocator.from_date(
                     DatePeriodType.DAY, d, objectname_spec[str(DatePeriodType.DAY)]))
-                if loc not in self.indices:
+                if loc not in self.__indices:
                     missed.append(loc)
             d += 1
 
         return missed
 
     def get_object(self, rel_path: str) -> RepoObject:
+        """
+            Get a repo object at the given relative path
+
+            Returns
+            -------
+            RepoObject | None
+                the repo objet at the given path. If no object is found then None is returned
+        """
         loc: FileObjectLocator = FileObjectLocator(rel_path)
-        e: RepoEntity = self.root
+        e: RepoEntity = self.__root
         for i in loc:
             if i in e:
                 e = e[i]
@@ -294,10 +334,10 @@ class FileRepoFS(RepoFS, FileRepoDirVisitor):
         pass
 
     def run_indexing(self) -> None:
-        self.indices.clear()
-        self.root.visit(self)
+        self.__indices.clear()
+        self.__root.visit(self)
 
     def visit(self, object: FileRepoObject) -> bool:
         loc: FileObjectLocator = FileObjectLocator.locate(object)
-        self.indices[str(loc)] = object
+        self.__indices[str(loc)] = object
         return True
