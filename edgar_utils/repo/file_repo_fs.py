@@ -191,7 +191,7 @@ class FileObjectLocator(object):
         return FileObjectLocator(obj.subpath(4))
 
     @staticmethod
-    def from_date(date_period: DatePeriodType, the_date: Date, objectname_spec: str) -> 'FileObjectLocator':
+    def from_date(date_period: DatePeriodType, the_date: Date, objectname_spec: str, qtrname: str = 'QTR{q}') -> 'FileObjectLocator':
         """
             Get a locator for the given date using the provided name specification
 
@@ -209,12 +209,11 @@ class FileObjectLocator(object):
             FileObjectLocator
                 the locator
         """
-        d : Date = the_date.__the_date
         path: List[str] = [
             str(date_period),
-            str(d.year),
-            str(the_date.quarter()),
-            objectname_spec.format(y = d.year, m = d.month, d = d.day)
+            str(the_date.year()),
+            qtrname.format(q = the_date.quarter()),
+            the_date.format(objectname_spec)
         ]
         return FileObjectLocator(path)
 
@@ -281,36 +280,50 @@ class FileRepoFS(RepoFS, FileRepoDirVisitor):
         """
         return [int(name) for (name, _) in self.__root[str(period_type)]]
 
-    def missing(self, from_date: Date, to_date: Date, objectname_spec: Dict[str,str]) -> List[str]:
-        missed: List[str] = []
-        self.run_indexing()
+    def update(self, from_date: Date, to_date: Date, objectname_spec: Dict[DatePeriodType,str]) -> List[str]:
+        """
+            Identifies objects that are not in the repository between two given dates
 
-        y: int = 0
-        q: int = 0
+            Parameters
+            ----------
+            from_date: Date
+                the start date
+            to_date: Date
+                the end date
+            objectname_spec: Dict[DatePeriodType,str]
+                the object specification for daily and quartely files
+
+            Returns
+            -------
+            List[str]
+                a list of missing objects
+        """
+        self.build_index()
         d: Date = from_date.copy()
-        holidays: USHoliday = None
-        for i in range(to_date.diff_days(from_date)):
-            (c_y, c_q, _, _, _) = d.parts()
-            if c_y != y:
-                holidays = USHoliday(c_y)
-                q = 0
-                y = c_y
 
-            if c_q != q:
-                loc: str = str(FileObjectLocator.from_date(
-                    DatePeriodType.QUARTER, d, objectname_spec[str(DatePeriodType.QUARTER)]))
-                if loc not in self.__indices:
-                    missed.append(loc)
-                q = c_y
+        update_object: List[str] = []
+        previous_year: int = 0
+        saved_quarter: int = 0
+        year_holidays: USHoliday = None
+        for _ in range(to_date.diff_days(from_date)):
+            (current_year, current_quarter, _, _, _) = d.parts()
+            if current_year != previous_year:
+                year_holidays = USHoliday(current_year)
+                previous_year = current_year
+                saved_quarter = 0
 
-            if not (d.is_weekend() or d in holidays):
+            if not (d.is_weekend() or d in year_holidays):
                 loc: str = str(FileObjectLocator.from_date(
-                    DatePeriodType.DAY, d, objectname_spec[str(DatePeriodType.DAY)]))
+                    DatePeriodType.DAY, d, objectname_spec[DatePeriodType.DAY]))
                 if loc not in self.__indices:
-                    missed.append(loc)
+                    if current_quarter != saved_quarter:
+                        update_object.append(str(FileObjectLocator.from_date(
+                            DatePeriodType.QUARTER, d, objectname_spec[DatePeriodType.QUARTER])))
+                        saved_quarter = current_quarter
+                    update_object.append(loc)
             d += 1
 
-        return missed
+        return update_object
 
     def get_object(self, rel_path: str) -> RepoObject:
         """
@@ -333,7 +346,7 @@ class FileRepoFS(RepoFS, FileRepoDirVisitor):
     def new_object(self, rel_path: str, objectname: str) -> RepoObject:
         pass
 
-    def run_indexing(self) -> None:
+    def build_index(self) -> None:
         self.__indices.clear()
         self.__root.visit(self)
 
