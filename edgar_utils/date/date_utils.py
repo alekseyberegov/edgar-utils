@@ -85,7 +85,7 @@ class Date(object):
         """
         return Date(the_date)
 
-    def format(self, format_spec: str) -> str:
+    def format(self, format_spec: str, date_period: DatePeriodType = None) -> str:
         """
             Formats the date according to the given specification
 
@@ -97,6 +97,10 @@ class Date(object):
                     - {d} for the day number
                     - {m} for the month number
                     - {y} for the 4-digit year number
+                    - {t} for the date period type
+
+            date_period: DatePeriodType
+                the date period type
 
             see https://docs.python.org/3/library/string.html#string-formatting
             
@@ -109,7 +113,8 @@ class Date(object):
             q = self.quarter(),
             y = self.__the_date.year,
             m = self.__the_date.month,
-            d = self.__the_date.day
+            d = self.__the_date.day,
+            t = str(date_period) if date_period is not None else ''
         )
 
     def parts(self) -> Tuple[int, int, int, int, int, int]:

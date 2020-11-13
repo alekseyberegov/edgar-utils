@@ -43,14 +43,12 @@ class TestFileRepoFS(object):
         obj: FileRepoObject = fs.get_object(obj_path)
         assert obj is None
 
-    def test_update(self, edgar_fs: tempfile.TemporaryDirectory):
+    def test_get_update_list(self, edgar_fs: tempfile.TemporaryDirectory):
         root: Path = Path(edgar_fs.name)
         fs: FileRepoFS = FileRepoFS(root)
-        miss: List[str] = fs.update(Date('2017-09-10'), Date('2019-05-25'), 
-            {
+        miss: List[str] = fs.get_update_list(Date('2017-09-10'), Date('2019-05-25'), {   
                 DatePeriodType.DAY     : 'master{y}{m:02}{d:02}.idx', 
-                DatePeriodType.QUARTER : 'master.idx'
-            })
+                DatePeriodType.QUARTER : 'master.idx'})
             
         holidays_sample: List[Date] = [
                 Date('2018-01-01'), Date('2018-01-15'), Date('2018-02-19'),
@@ -60,13 +58,12 @@ class TestFileRepoFS(object):
                 Date('2019-01-21'), Date('2019-02-18'), Date('2019-05-27'),
             ]
         
-        loc: FileObjectLocator = None
         qty_count: int = 0
         day_count: int = 0
         for i in miss:
-            loc = FileObjectLocator(i)
+            loc: FileObjectLocator = FileObjectLocator(i)
             if loc[0] == str(DatePeriodType.QUARTER):
-                assert loc[3] == 'master.idx'
+                assert loc[-1] == 'master.idx'
                 qty_count += 1
             else:
                 the_date: Date = loc.date('master{y:04}{m:02}{d:02}.idx')
@@ -77,6 +74,17 @@ class TestFileRepoFS(object):
         assert qty_count == 7
         assert day_count == 350
 
-
+    @pytest.mark.parametrize("path, object_name, expected_result", [
+        ('D/2017/QTR3', 'master20170901.idx', ['D', '2017', 'QTR3', 'master20170901.idx']),
+        ('D/2018/QTR1', 'master20180102.idx', ['D', '2018', 'QTR1', 'master20180102.idx']),
+        ('D/2017/QTR4', 'master20171213.idx', ['D', '2017', 'QTR4', 'master20171213.idx']),
+    ])
+    def test_new_object(self, edgar_fs: tempfile.TemporaryDirectory, path: str, object_name: str, expected_result: List[str]):
+        root: Path = Path(edgar_fs.name)
+        fs: FileRepoFS = FileRepoFS(root)
+    
+        obj: FileRepoObject = fs.new_object(path, object_name)
+        assert obj is not None
+        assert obj.subpath(4) == expected_result
 
 
