@@ -5,10 +5,6 @@ from typing import List
 """
 YEAR_LIST: List[int] = [2017, 2018, 2019, 2020]
 
-YEAR_COUNT: int = len(YEAR_LIST)
-
-YEAR_MAX: int = max(YEAR_LIST)
-
 """
     The list of quarters named as in Edgar INDEX
 """

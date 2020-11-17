@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 from faker import Faker
 from edgar_utils.repo.file_repo_fs import FileObjectLocator, FileRepoDir, FileRepoFS, FileRepoObject
-from edgar_utils.tests.globals import YEAR_LIST, YEAR_COUNT, YEAR_MAX, FILE_PER_DIR
+from edgar_utils.tests.globals import YEAR_LIST
 
 
 class TestFileRepoFS(object):

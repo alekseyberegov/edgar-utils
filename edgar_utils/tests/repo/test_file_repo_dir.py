@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, List, Iterator
 from datetime import datetime, timedelta
 from edgar_utils.repo.file_repo_fs import FileRepoDir, FileRepoObject
-from edgar_utils.tests.globals import YEAR_LIST, YEAR_MAX, FILE_PER_DIR, YEAR_COUNT
+from edgar_utils.tests.globals import YEAR_LIST, FILE_PER_DIR
 
 
 class TestFileRepoDir(object):
@@ -99,19 +99,21 @@ class TestFileRepoDir(object):
         mock.visit.return_value = True
         dir.visit(mock)
 
+        l: int = len(YEAR_LIST)
+        m: int = max(YEAR_LIST)
         i: int = 0
         for c in mock.mock_calls:
             assert c[0] == 'visit'
             assert isinstance(c[1][0], FileRepoObject)
             assert c[1][0].subpath(4) == [
-                "QD"[i // (FILE_PER_DIR * 4 * YEAR_COUNT)],
-                "{year}".format(year = YEAR_MAX - (i // (FILE_PER_DIR * 4)) % YEAR_COUNT),
+                "QD"[i // (FILE_PER_DIR * 4 * l)],
+                "{year}".format(year = m - (i // (FILE_PER_DIR * 4)) % l),
                 "QTR{quarter}".format(quarter = 4 - (i // FILE_PER_DIR) % 4),
                 "file-{file}.txt".format(file = FILE_PER_DIR - (i % FILE_PER_DIR) - 1)
             ]
             i += 1
 
-        assert len(mock.mock_calls) == FILE_PER_DIR * 4 * YEAR_COUNT * 2
+        assert len(mock.mock_calls) == FILE_PER_DIR * 4 * l * 2
 
     def test_visit_one_object(self, fs_root: tempfile.TemporaryDirectory) -> None:
         dir: FileRepoDir = FileRepoDir(Path(fs_root.name))
@@ -122,6 +124,6 @@ class TestFileRepoDir(object):
         c = mock.mock_calls[0]
         assert c[0] == 'visit'
         assert isinstance(c[1][0], FileRepoObject)
-        assert c[1][0].subpath(4) == ['Q', str(YEAR_MAX), 'QTR4', 'file-2.txt']
+        assert c[1][0].subpath(4) == ['Q', str(max(YEAR_LIST)), 'QTR4', 'file-2.txt']
         assert len(mock.mock_calls) == 1
 
