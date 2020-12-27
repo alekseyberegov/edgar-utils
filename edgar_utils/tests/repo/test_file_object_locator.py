@@ -12,7 +12,7 @@ class TestFileObjectLocator(object):
         ('D/2020/QTR1/master20200125.idx', 'D', 1, 2020, '2020-01-25'),
     ])    
     def test_init_with_path(self, path: str, date_period: str, quarter: int, year: int, date_str: str) -> None:
-        loc: FileObjectLocator = FileObjectLocator(path)
+        loc: FileObjectLocator = FileObjectLocator(path, FileObjectLocator.DEFAULT_PATH_SPEC)
         assert loc.date_period() == DatePeriodType.from_string(date_period)
         assert loc.year() == year
         assert loc.quarter() == quarter
@@ -24,7 +24,7 @@ class TestFileObjectLocator(object):
         (['D','2020','QTR1','master20200125.idx'], 'D', 1, 2020, '2020-01-25'),
     ])    
     def test_init_with_list(self, path: List[str], date_period: str, quarter: int, year: int, date_str: str) -> None:
-        loc: FileObjectLocator = FileObjectLocator(path)
+        loc: FileObjectLocator = FileObjectLocator(path, FileObjectLocator.DEFAULT_PATH_SPEC)
         assert loc.date_period() == DatePeriodType.from_string(date_period)
         assert loc.year() == year
         assert loc.quarter() == quarter
@@ -37,7 +37,7 @@ class TestFileObjectLocator(object):
     def test_locate_success(self,  fs_root: tempfile.TemporaryDirectory, path_list: List[str], expected_result: str):
         root: Path = Path(fs_root.name)
         dir: FileRepoDir = FileRepoDir(root)
-        loc: FileObjectLocator = FileObjectLocator.locate(dir.get(path_list))
+        loc: FileObjectLocator = FileObjectLocator.locate(dir.get(path_list), FileObjectLocator.DEFAULT_PATH_SPEC)
         assert str(loc) == expected_result
         
     @pytest.mark.parametrize("path, date_period, quarter, year, date_str", [
@@ -46,7 +46,7 @@ class TestFileObjectLocator(object):
         (['D','2020','QTR1','master20200125.idx'], 'D', 'QTR1', '2020', '2020-01-25'),
     ])    
     def test_getitem(self, path:str, date_period: str, quarter: str, year: int, date_str: str) -> None:
-        loc: FileObjectLocator = FileObjectLocator(path)
+        loc: FileObjectLocator = FileObjectLocator(path, FileObjectLocator.DEFAULT_PATH_SPEC)
         assert loc[0] == date_period
         assert loc[1] == year
         assert loc[2] == quarter
@@ -58,5 +58,5 @@ class TestFileObjectLocator(object):
         (['D','2020','QTR1','master20200125.idx'], 'D/2020/QTR1/master20200125.idx'),
     ])  
     def test_str(self, path: List[str], expected_result: str) -> None:
-        loc: FileObjectLocator = FileObjectLocator(path)
+        loc: FileObjectLocator = FileObjectLocator(path, FileObjectLocator.DEFAULT_PATH_SPEC)
         assert str(loc) == expected_result

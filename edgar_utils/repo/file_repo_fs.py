@@ -1,5 +1,5 @@
 from sys import path
-from edgar_utils.repo.repo_fs import RepoDir, RepoObject, RepoFS, RepoEntity
+from edgar_utils.repo.repo_fs import RepoDir, RepoObject, RepoFS, RepoEntity, RepoFormat
 from edgar_utils.date.date_utils import Date, DatePeriodType
 from edgar_utils.date.holidays import USHoliday
 from pathlib import Path
@@ -182,12 +182,15 @@ class FileObjectLocator(object):
         ----------
         path: Union[str,List[str]]
             a relative path as a string or in a form of a list for individuals path elements
+        spec: List[str]
+            the path specification
     """
-    def __init__(self, path: Union[str, List[str]]) -> None:
+    def __init__(self, path: Union[str, List[str]], spec: List[str]) -> None:
         self.path = path if isinstance(path, List) else path.split(os.path.sep)
+        self.spec = spec
 
     @staticmethod
-    def locate(obj: FileRepoObject) -> 'FileObjectLocator':
+    def locate(obj: FileRepoObject, path_spec: List[str]) -> 'FileObjectLocator':
         """
             Get a locator for the given repo object
 
@@ -200,12 +203,14 @@ class FileObjectLocator(object):
             -------
             FileObjectLocator
                 the locator for the given repo object
+            List[str]
+                the path specification
         """
-        return FileObjectLocator(obj.subpath(4))
+        return FileObjectLocator(obj.subpath(4), path_spec)
 
     @staticmethod
     def from_date(date_period: DatePeriodType, the_date: Date, 
-            objectname_spec: str) -> 'FileObjectLocator':
+            objectname_spec: str, path_spec: List[str]) -> 'FileObjectLocator':
         """
             Get an object locator for the given date using the provided name specification
 
@@ -217,17 +222,17 @@ class FileObjectLocator(object):
                 the date
             objectname_spec: str
                 the object name specification
-            quartername_spec: str
-                the quarter name specification; the default is QTR{q}
+            path_spec: str
+                the path specification
 
             Returns
             -------
             FileObjectLocator
                 the locator
         """
-        path: List[str] = [the_date.format(spec, date_period) for spec in FileObjectLocator.DEFAULT_PATH_SPEC]
+        path: List[str] = [the_date.format(spec, date_period) for spec in path_spec]
         path.append(the_date.format(objectname_spec, date_period))    
-        return FileObjectLocator(path)
+        return FileObjectLocator(path, path_spec)
 
     def __len__(self) -> int:
         return len(self.path)
@@ -327,18 +332,19 @@ class FileObjectLocator(object):
         i: int = 0
         param_macro = '{' + param_name + '}'
 
-        for spec in FileObjectLocator.DEFAULT_PATH_SPEC:
-            if param_macro in spec:
-                return parse(spec, self.path[i])[param_name]
+        for s in self.spec:
+            if param_macro in s:
+                return parse(s, self.path[i])[param_name]
             i += 1
         return None
             
 
 class FileRepoFS(RepoFS, FileRepoDirVisitor):
-    def __init__(self, dir: Path, objectname_spec: Dict[DatePeriodType,str]) -> None:
+    def __init__(self, dir: Path, repo_format: RepoFormat) -> None:
         self.__root : FileRepoDir = FileRepoDir(dir)
         self.__indices: Dict[str, FileRepoObject] = {}
-        self.__objectname_spec: Dict[DatePeriodType,str] = objectname_spec
+        self.__objectname_spec: Dict[DatePeriodType,str] = repo_format.object_specs
+        self.__path_spec: List[str] = repo_format.path_spec
 
     def list_years(self, period_type: DatePeriodType) -> List[int]:
         """
@@ -388,11 +394,11 @@ class FileRepoFS(RepoFS, FileRepoDirVisitor):
                 used_quarter = 0
 
             if not (cur_date.is_weekend() or cur_date in holidays):
-                loc: str = self.locator(DatePeriodType.DAY, day_spec, cur_date)
+                loc: str = self.locator(DatePeriodType.DAY, day_spec, self.__path_spec, cur_date)
                 if loc not in self.__indices:
                     if cur_quarter != used_quarter:
                         # Add a quartely file to the update list only if it has not been added before
-                        updates_list.append(self.locator(DatePeriodType.QUARTER, quarter_spec, cur_date))
+                        updates_list.append(self.locator(DatePeriodType.QUARTER, quarter_spec, self.__path_spec, cur_date))
                         used_quarter = cur_quarter
                     # Add a daily file to the update list
                     updates_list.append(loc)
@@ -401,8 +407,8 @@ class FileRepoFS(RepoFS, FileRepoDirVisitor):
         return updates_list
 
     @staticmethod
-    def locator(period: DatePeriodType, objectname_spec: str, the_date: Date) -> str:
-        return str(FileObjectLocator.from_date(period, the_date, objectname_spec))
+    def locator(period: DatePeriodType, objectname_spec: str, path_spec: List[str], the_date: Date) -> str:
+        return str(FileObjectLocator.from_date(period, the_date, objectname_spec, path_spec))
 
     def get_object(self, rel_path: str) -> RepoObject:
         """
@@ -413,7 +419,7 @@ class FileRepoFS(RepoFS, FileRepoDirVisitor):
             RepoObject | None
                 the repo objet at the given path. If no object is found then None is returned
         """
-        loc: FileObjectLocator = FileObjectLocator(rel_path)
+        loc: FileObjectLocator = FileObjectLocator(rel_path, self.__path_spec)
         e: RepoEntity = self.__root
         for i in loc:
             if i in e:
@@ -438,7 +444,7 @@ class FileRepoFS(RepoFS, FileRepoDirVisitor):
             RepoObject
                 the newly created repo object
         """
-        loc: FileObjectLocator = FileObjectLocator(rel_path)
+        loc: FileObjectLocator = FileObjectLocator(rel_path, self.__path_spec)
         e: RepoEntity = self.__root
 
         for i in range(len(loc)):
@@ -459,6 +465,6 @@ class FileRepoFS(RepoFS, FileRepoDirVisitor):
         self.__root.visit(self)
 
     def visit(self, object: FileRepoObject) -> bool:        
-        loc: FileObjectLocator = FileObjectLocator.locate(object)
+        loc: FileObjectLocator = FileObjectLocator.locate(object, self.__path_spec)
         self.__indices[str(loc)] = object
         return True

@@ -2,7 +2,7 @@ import pytest
 import tempfile
 import time
 
-from edgar_utils.repo.repo_fs import RepoEntity
+from edgar_utils.repo.repo_fs import RepoFormat
 from edgar_utils.date.date_utils import DatePeriodType, Date
 from typing import Dict, Iterator, List
 from pathlib import Path
@@ -13,14 +13,17 @@ from edgar_utils.repo.file_repo_fs import FileObjectLocator, FileRepoDir, FileRe
 from edgar_utils.tests.globals import YEAR_LIST
 
 
-class TestFileRepoFS(object):
-    OBJECTNAME_SPEC: Dict[DatePeriodType, str] = {   
-        DatePeriodType.DAY     : 'master{y}{m:02}{d:02}.idx', 
-        DatePeriodType.QUARTER : 'master.idx'
-    }
+class TestFileRepoFS(object):    
+    REPO_FORMAT: RepoFormat = RepoFormat(
+        { 
+            DatePeriodType.DAY     : 'master{y}{m:02}{d:02}.idx', 
+            DatePeriodType.QUARTER : 'master.idx'
+        },
+        ['{t}', '{y}', 'QTR{q}']
+    )
 
     def test_list_years(self, fs_root: tempfile.TemporaryDirectory, fake: Faker) -> None:
-        fs: FileRepoFS = FileRepoFS(Path(fs_root.name), self.OBJECTNAME_SPEC)
+        fs: FileRepoFS = FileRepoFS(Path(fs_root.name), self.REPO_FORMAT)
         for j in [DatePeriodType.DAY, DatePeriodType.QUARTER]:
             years: List[int] = fs.list_years(j)
             assert max(years) == max(YEAR_LIST)
@@ -33,7 +36,7 @@ class TestFileRepoFS(object):
     ])
     def test_get_object_success(self, fs_root: tempfile.TemporaryDirectory, obj_path: str):
         root: Path = Path(fs_root.name)
-        fs: FileRepoFS = FileRepoFS(root, self.OBJECTNAME_SPEC)
+        fs: FileRepoFS = FileRepoFS(root, self.REPO_FORMAT)
         obj: FileRepoObject = fs.get_object(obj_path)
         assert obj is not None
         assert obj.path == root / obj_path
@@ -44,13 +47,13 @@ class TestFileRepoFS(object):
     ])
     def test_get_object_failure(self, fs_root: tempfile.TemporaryDirectory, obj_path: str):
         root: Path = Path(fs_root.name)
-        fs: FileRepoFS = FileRepoFS(root, self.OBJECTNAME_SPEC)
+        fs: FileRepoFS = FileRepoFS(root, self.REPO_FORMAT)
         obj: FileRepoObject = fs.get_object(obj_path)
         assert obj is None
 
     def test_get_update_list(self, edgar_fs: tempfile.TemporaryDirectory):
         root: Path = Path(edgar_fs.name)
-        fs: FileRepoFS = FileRepoFS(root, self.OBJECTNAME_SPEC)
+        fs: FileRepoFS = FileRepoFS(root, self.REPO_FORMAT)
         miss: List[str] = fs.get_update_list(Date('2017-09-10'), Date('2019-05-25'))
             
         holidays_sample: List[Date] = [
@@ -64,7 +67,7 @@ class TestFileRepoFS(object):
         qty_count: int = 0
         day_count: int = 0
         for i in miss:
-            loc: FileObjectLocator = FileObjectLocator(i)
+            loc: FileObjectLocator = FileObjectLocator(i, FileObjectLocator.DEFAULT_PATH_SPEC)
             if loc[0] == str(DatePeriodType.QUARTER):
                 assert loc[-1] == 'master.idx'
                 qty_count += 1
@@ -84,7 +87,7 @@ class TestFileRepoFS(object):
     ])
     def test_new_object(self, edgar_fs: tempfile.TemporaryDirectory, path: str, object_name: str, expected_result: List[str]):
         root: Path = Path(edgar_fs.name)
-        fs: FileRepoFS = FileRepoFS(root, self.OBJECTNAME_SPEC)
+        fs: FileRepoFS = FileRepoFS(root, self.REPO_FORMAT)
         obj: FileRepoObject = fs.new_object(path, object_name)
 
         assert obj is not None
