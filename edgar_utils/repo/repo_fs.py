@@ -1,5 +1,5 @@
 import abc
-from typing import Tuple, Iterator, Generator, List
+from typing import Tuple, Iterator, Generator, List, Dict
 
 from edgar_utils.date.date_utils import Date, DatePeriodType
 
@@ -32,5 +32,17 @@ class RepoDir(RepoEntity, metaclass=abc.ABCMeta):
 
 class RepoFS(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def list_years(self, period_type: DatePeriodType) -> List[int]:
+    def get_update_list(self, from_date: Date, to_date: Date) -> List[str]:
+        pass
+
+    @abc.abstractmethod
+    def get_object(self, rel_path: str) -> RepoObject:
+        pass
+
+    @abc.abstractmethod
+    def new_object(self, rel_path: str, object_name: str) -> RepoObject:
+        pass
+
+    @abc.abstractmethod
+    def refresh(self) -> None:
         pass

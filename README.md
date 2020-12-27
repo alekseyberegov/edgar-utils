@@ -24,3 +24,17 @@
   ```
     python.testing.pyTestEnabled 
   ```
+
+## Running tests
+* Activate venv
+  ```
+  $ source ./venv/bin/activate
+  ```
+* Run tests manually
+  ```
+  $ pytest
+  ```
+* Run tests via make
+  ```
+  $ make deveop.test
+  ```

@@ -7,7 +7,7 @@ from datetime import date
 from typing import Dict, Generator, Iterator, Tuple, List, Union
 from parse import parse
 
-import tempfile, os, datetime, abc
+import os, datetime, abc
 
 class FileLocked(Exception):
     """File is already locked."""
@@ -335,9 +335,10 @@ class FileObjectLocator(object):
             
 
 class FileRepoFS(RepoFS, FileRepoDirVisitor):
-    def __init__(self, dir: Path) -> None:
+    def __init__(self, dir: Path, objectname_spec: Dict[DatePeriodType,str]) -> None:
         self.__root : FileRepoDir = FileRepoDir(dir)
         self.__indices: Dict[str, FileRepoObject] = {}
+        self.__objectname_spec: Dict[DatePeriodType,str] = objectname_spec
 
     def list_years(self, period_type: DatePeriodType) -> List[int]:
         """
@@ -350,7 +351,7 @@ class FileRepoFS(RepoFS, FileRepoDirVisitor):
         """
         return [int(name) for (name, _) in self.__root[str(period_type)]]
 
-    def get_update_list(self, from_date: Date, to_date: Date, objectname_spec: Dict[DatePeriodType,str]) -> List[str]:
+    def get_update_list(self, from_date: Date, to_date: Date) -> List[str]:
         """
             Identifies objects that are not in the repository or need to be updated for the given dates
 
@@ -360,8 +361,6 @@ class FileRepoFS(RepoFS, FileRepoDirVisitor):
                 the start date
             to_date: Date
                 the end date
-            objectname_spec: Dict[DatePeriodType,str]
-                the object specification for daily and quartely files
 
             Returns
             -------
@@ -372,8 +371,8 @@ class FileRepoFS(RepoFS, FileRepoDirVisitor):
         used_quarter: int = 0
         holidays: USHoliday = None
 
-        day_spec: str = objectname_spec[DatePeriodType.DAY]
-        quarter_spec: str = objectname_spec[DatePeriodType.QUARTER]
+        day_spec: str = self.__objectname_spec[DatePeriodType.DAY]
+        quarter_spec: str = self.__objectname_spec[DatePeriodType.QUARTER]
 
         self.refresh()
 
