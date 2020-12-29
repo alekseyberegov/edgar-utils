@@ -38,3 +38,9 @@
   ```
   $ make deveop.test
   ```
+
+## Generating documentation
+* Install sphinx
+  ```
+  $ pip install sphinx
+  ```

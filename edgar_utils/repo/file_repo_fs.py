@@ -19,6 +19,16 @@ class FileLocked(Exception):
 
 
 class FileRepoDir(RepoDir):
+    """The repo directory for a regular file system
+
+    Parameters
+    ----------
+    path : `Path`
+        the physical path to the directory
+
+    parent : `FileRepoDir`
+        the parent directory
+    """
     def __init__(self, path: Path, parent: 'FileRepoDir' = None) -> None:
         self.path : Path = path.resolve()
         self.parent : 'FileRepoDir' = parent
@@ -165,46 +175,44 @@ class FileRepoDirVisitor(metaclass=abc.ABCMeta):
 
 class FileObjectLocator(object):
     """
-        This class represents an utility that helps locating objects in the repository
-        using either a relative path or date
+    This class represents an utility that helps locating objects 
+    in the repository using either a relative path or date
+
+    The default path specification for objects in the repository is as follow
+        ["D" | "Q"] / <YEAR> / "QTR"<QUARTER> 
     """
 
-    """
-        The default path specification for objects in the repository
-            ["D" | "Q"] / <YEAR> / "QTR"<QUARTER> 
-    """
     DEFAULT_PATH_SPEC: List[str] = ['{t}', '{y}', 'QTR{q}']
 
-    """
-        Locate a file object in a repo FS
+    def __init__(self, path: Union[str, List[str]], spec: List[str]) -> None:
+        """Locate a file object in a repo FS
 
         Parameters
-        ----------
-        path: Union[str,List[str]]
-            a relative path as a string or in a form of a list for individuals path elements
-        spec: List[str]
+        -----------
+        path: `Union[str,List[str]]`
+            the relative path as a string or in a form of a list for individuals path elements
+
+        spec: `List[str]`
             the path specification
-    """
-    def __init__(self, path: Union[str, List[str]], spec: List[str]) -> None:
+        """
         self.path = path if isinstance(path, List) else path.split(os.path.sep)
         self.spec = spec
 
     @staticmethod
     def locate(obj: FileRepoObject, path_spec: List[str]) -> 'FileObjectLocator':
-        """
-            Get a locator for the given repo object
+        """Get a locator for the given repo object
 
-            Parameters
-            ----------
-            obj: FileRepoObject
-                the repo object for which a locator will be returned
+        Parameters
+        ----------
+        obj: FileRepoObject
+            the repo object for which a locator will be returned
+        path_spec : List[str]
+            the path specification
 
-            Returns
-            -------
-            FileObjectLocator
-                the locator for the given repo object
-            List[str]
-                the path specification
+        Returns
+        -------
+        FileObjectLocator
+            the locator for the given repo object
         """
         return FileObjectLocator(obj.subpath(len(path_spec) + 1), path_spec)
 
@@ -212,22 +220,22 @@ class FileObjectLocator(object):
     def from_date(date_period: DatePeriodType, the_date: Date, 
             objectname_spec: str, path_spec: List[str]) -> 'FileObjectLocator':
         """
-            Get an object locator for the given date using the provided name specification
+        Get an object locator for the given date using the provided name specification
 
-            Parameters
-            ----------
-            date_period: DatePeriodType
+        Parameters
+        ----------
+        date_period: `DatePeriodType`
                 the date period: day or quarter
-            the_date: Date
+        the_date: `Date`
                 the date
-            objectname_spec: str
+        objectname_spec: `str`
                 the object name specification
-            path_spec: str
+        path_spec: `List[str]`
                 the path specification
 
-            Returns
-            -------
-            FileObjectLocator
+        Returns
+        -------
+        FileObjectLocator
                 the locator
         """
         path: List[str] = [the_date.format(spec, date_period) for spec in path_spec]
@@ -294,24 +302,30 @@ class FileObjectLocator(object):
 
     def date_period(self) -> DatePeriodType:
         """
-            Returns the date period associated with an object identified by the locator
+        Returns the date period associated with an object identified by the locator
 
-            Returns
-            -------
-            DatePeriodType
-                the date period: quarter or day
+        Returns
+        -------
+        DatePeriodType
+            the date period
         """
         return DatePeriodType.from_string(self.get_param('t'))
 
     def date(self, objectname_spec: str) -> Date:
         """
-            Returns the date of the locator
+        Returns the date of the locator
 
-            Returns
-            -------
-            Date
-                the date
+        Parameters
+        ----------
+        objectname_spec: `str`
+            the object name specification
+
+        Returns
+        -------
+        Date
+            the date
         """
+
         params = parse(objectname_spec, self.path[-1])
         return Date(date(int(params['y']), int(params['m']),int(params['d'])))
 

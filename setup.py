@@ -17,7 +17,8 @@ setup(
         "pytest-cov",
         "faker",
         "parse",
-        "requests"
+        "requests",
+        "sphinx"
     ],
     classifiers=[
         # 3 - Alpha, 4 - Beta, 5 - Production/Stable
