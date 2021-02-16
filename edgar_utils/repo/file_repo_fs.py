@@ -1,7 +1,7 @@
 from sys import path
 from edgar_utils.repo.repo_fs import RepoDir, RepoObject, RepoFS, RepoEntity, RepoFormat
 from edgar_utils.date.date_utils import Date, DatePeriodType
-from edgar_utils.date.holidays import USHoliday
+from edgar_utils.date.holidays import us_holidays
 from pathlib import Path
 from datetime import date
 from typing import Dict, Generator, Iterator, Tuple, List, Union
@@ -386,43 +386,45 @@ class FileRepoFS(RepoFS, FileRepoDirVisitor):
             List[str]
                 a list of missing objects
         """
-        used_year: int = 0
-        used_quarter: int = 0
-        holidays: USHoliday = None
-
-        day_spec: str = self.__repo_format.object_specs[DatePeriodType.DAY]
-        quarter_spec: str = self.__repo_format.object_specs[DatePeriodType.QUARTER]
-        path_spec: List[str] = self.__repo_format.path_spec
-
         self.refresh()
 
-        cur_date: Date = from_date.copy()
-        updates_list: List[str] = []
+        in_y: int = 0
+        in_q: int = 0
+        h: us_holidays = None
+        u: List[str] = []
+        d: Date = from_date.copy()
+
         for _ in range(to_date.diff_days(from_date)):
-            (cur_year, cur_quarter, _, _, _) = cur_date.parts()
+            (y, q, _, _, _) = d.parts()
 
-            if cur_year != used_year:
+            if y != in_y:
                 # Moving to the first or to the next year
-                holidays = USHoliday(cur_year)
-                used_year, used_quarter = cur_year, 0
+                h = us_holidays(y)
+                in_y, in_q = y, 0
 
-            if not (cur_date.is_weekend() or cur_date in holidays):
-                loc: str = self.locator(DatePeriodType.DAY, day_spec, path_spec, cur_date)
-                if loc not in self.__indices:
-                    if cur_quarter != used_quarter:
+            if not (d.is_weekend() or d in h):
+                o: str = self._path(DatePeriodType.DAY, d)
+                if o not in self.__indices:
+                    if q != in_q:
                         # Add a quartely file to the update list only if it has not been added before
-                        updates_list.append(self.locator(DatePeriodType.QUARTER, quarter_spec,path_spec, cur_date))
-                        used_quarter = cur_quarter
+                        u.append(self._path(DatePeriodType.QUARTER, d))
+                        in_q = q
+
                     # Add a daily file to the update list
-                    updates_list.append(loc)
+                    u.append(o)
+
             # next date
-            cur_date += 1
+            d += 1
 
-        return updates_list
+        return u
 
-    @staticmethod
-    def locator(period: DatePeriodType, objectname_spec: str, path_spec: List[str], the_date: Date) -> str:
-        return str(FileObjectLocator.from_date(period, the_date, objectname_spec, path_spec))
+    def _path(self, period: DatePeriodType, the_date: Date) -> str:
+        return str(FileObjectLocator.from_date(
+            period, 
+            the_date, 
+            self.__repo_format.object_specs[period],  
+            self.__repo_format.path_spec)
+        )
 
     def get_object(self, rel_path: str) -> RepoObject:
         """

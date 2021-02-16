@@ -1,9 +1,9 @@
 import pytest
-from edgar_utils.date.holidays import USHoliday
+from edgar_utils.date.holidays import us_holidays
 from edgar_utils.date.date_utils import Date
 from typing import Dict
 
-class TestUSHoliday(object):
+class TestHolidays(object):
     @pytest.mark.parametrize("date_str, expected_result", [
         ("2020-01-01", True),
         ("2020-01-20", True),
@@ -18,12 +18,12 @@ class TestUSHoliday(object):
     ])
     def test_contains(self, date_str: str, expected_result: bool) -> None:
         date_obj: Date = Date(date_str)
-        holidays: USHoliday = USHoliday(date_obj.year())
+        holidays: us_holidays = us_holidays(date_obj.year())
         assert (date_obj in holidays) == expected_result
 
     def test_iterator(self) -> None:
         date_obj: Date = Date("2020-01-01")
-        holidays: USHoliday = USHoliday(date_obj.year())
+        holidays: us_holidays = us_holidays(date_obj.year())
         dates: Dict[str, bool] = {}
         for i in holidays:
             dates[str(i)] = True
@@ -45,6 +45,6 @@ class TestUSHoliday(object):
 
     ])
     def test_name(self, date_str: str, expected_result: str) -> None:
-        holidays: USHoliday = USHoliday(2020)
+        holidays: us_holidays = us_holidays(2020)
         assert (holidays << date_str) == expected_result
 

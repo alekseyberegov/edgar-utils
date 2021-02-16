@@ -7,7 +7,7 @@ from edgar_utils.date.date_utils import Date
 # law that specifies holidays for Federal employees. Though other institutions such as state and local governments and private
 # businesses may use other names, it is our policy to always refer to holidays by the names designated in the law.
 
-class USHoliday(object):
+class us_holidays(object):
     FIRST_WEEK: int = 1
     SECOND_WEEK: int = 2
     THIRD_WEEK: int = 3
