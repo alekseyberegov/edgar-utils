@@ -16,7 +16,9 @@ class RepoFormat:
                     - {y} for the 4-digit year number
                     - {t} for the date period type
 
-        Example: master{y}{m:02}{d:02}.idx
+        Examples
+        -------- 
+        >>> master{y}{m:02}{d:02}.idx
     """
     object_specs: Dict[DatePeriodType, str] 
 
