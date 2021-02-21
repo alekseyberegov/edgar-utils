@@ -76,8 +76,8 @@ class TestFileRepoDir(object):
         (['Q', '2020', 'QTR1', 'file-0.txt'],  'Q/2020/QTR1/file-0.txt' ),
         (['Q', '2020', 'QTR3', 'file-1.txt'],  'Q/2020/QTR3/file-1.txt' ),
     ])
-    def test_get_success(self, fs_root: tempfile.TemporaryDirectory, path_list: List[str], expected_result: str):
-        root: Path = Path(fs_root.name)
+    def test_get_success(self, test_fs: tempfile.TemporaryDirectory, path_list: List[str], expected_result: str):
+        root: Path = Path(test_fs.name)
         dir: FileRepoDir = FileRepoDir(root)
         obj: FileRepoObject = dir.get(path_list)
         assert  root / expected_result == obj.path
@@ -86,15 +86,15 @@ class TestFileRepoDir(object):
         (['Q', '2200', 'QTR1', 'file-0.txt']),
         (['Q', '2020', 'QTR3', 'file-9.txt']),
     ])
-    def test_get_failure(self, fs_root: tempfile.TemporaryDirectory, path_list: List[str]):
-        root: Path = Path(fs_root.name)
+    def test_get_failure(self, test_fs: tempfile.TemporaryDirectory, path_list: List[str]):
+        root: Path = Path(test_fs.name)
         dir: FileRepoDir = FileRepoDir(root)
         obj: FileRepoObject = dir.get(path_list)
         assert  obj is None
 
 
-    def test_visit_all_objects(self, fs_root: tempfile.TemporaryDirectory) -> None:
-        dir: FileRepoDir = FileRepoDir(Path(fs_root.name))
+    def test_visit_all_objects(self, test_fs: tempfile.TemporaryDirectory) -> None:
+        dir: FileRepoDir = FileRepoDir(Path(test_fs.name))
         mock: MagicMock = MagicMock()
         mock.visit.return_value = True
         dir.visit(mock)
@@ -115,8 +115,8 @@ class TestFileRepoDir(object):
 
         assert len(mock.mock_calls) == FILE_PER_DIR * 4 * l * 2
 
-    def test_visit_one_object(self, fs_root: tempfile.TemporaryDirectory) -> None:
-        dir: FileRepoDir = FileRepoDir(Path(fs_root.name))
+    def test_visit_one_object(self, test_fs: tempfile.TemporaryDirectory) -> None:
+        dir: FileRepoDir = FileRepoDir(Path(test_fs.name))
         mock: MagicMock = MagicMock()
         mock.visit.return_value = False
         dir.visit(mock)

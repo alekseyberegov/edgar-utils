@@ -26,7 +26,7 @@ def dir_prepped() -> tempfile.TemporaryDirectory:
     return dir
 
 @pytest.fixture
-def fs_root() -> tempfile.TemporaryDirectory:
+def test_fs() -> tempfile.TemporaryDirectory:
     dir: tempfile.TemporaryDirectory  = tempfile.TemporaryDirectory(suffix = "_test_fs")
     root: Path = Path(dir.name)
     for t in [DatePeriodType.DAY, DatePeriodType.QUARTER]:

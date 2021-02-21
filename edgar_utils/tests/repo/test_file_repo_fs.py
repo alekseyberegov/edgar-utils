@@ -15,15 +15,12 @@ from edgar_utils.tests.globals import YEAR_LIST
 
 class TestFileRepoFS(object):    
     REPO_FORMAT: RepoFormat = RepoFormat(
-        { 
-            DatePeriodType.DAY     : 'master{y}{m:02}{d:02}.idx', 
-            DatePeriodType.QUARTER : 'master.idx'
-        },
+        {DatePeriodType.DAY: 'master{y}{m:02}{d:02}.idx', DatePeriodType.QUARTER : 'master.idx'},
         ['{t}', '{y}', 'QTR{q}']
     )
 
-    def test_list_years(self, fs_root: tempfile.TemporaryDirectory, fake: Faker) -> None:
-        fs: FileRepoFS = FileRepoFS(Path(fs_root.name), self.REPO_FORMAT)
+    def test_list_years(self, test_fs: tempfile.TemporaryDirectory, fake: Faker) -> None:
+        fs: FileRepoFS = FileRepoFS(Path(test_fs.name), self.REPO_FORMAT)
         for j in [DatePeriodType.DAY, DatePeriodType.QUARTER]:
             years: List[int] = fs.list_years(j)
             assert max(years) == max(YEAR_LIST)
@@ -34,8 +31,8 @@ class TestFileRepoFS(object):
         ('Q/2020/QTR1/file-0.txt'),
         ('Q/2020/QTR3/file-1.txt'),
     ])
-    def test_get_object_success(self, fs_root: tempfile.TemporaryDirectory, obj_path: str):
-        root: Path = Path(fs_root.name)
+    def test_get_object_success(self, test_fs: tempfile.TemporaryDirectory, obj_path: str):
+        root: Path = Path(test_fs.name)
         fs: FileRepoFS = FileRepoFS(root, self.REPO_FORMAT)
         obj: FileRepoObject = fs.get_object(obj_path)
         assert obj is not None
@@ -45,11 +42,25 @@ class TestFileRepoFS(object):
         ('Q/2010/QTR1/file-0.txt'),
         ('Q/2010/QTR3/file-1.txt'),
     ])
-    def test_get_object_failure(self, fs_root: tempfile.TemporaryDirectory, obj_path: str):
-        root: Path = Path(fs_root.name)
+    def test_get_object_failure(self, test_fs: tempfile.TemporaryDirectory, obj_path: str):
+        root: Path = Path(test_fs.name)
         fs: FileRepoFS = FileRepoFS(root, self.REPO_FORMAT)
         obj: FileRepoObject = fs.get_object(obj_path)
         assert obj is None
+
+    # ['2017-QTR4-92', '2018-QTR1-25']
+    @pytest.mark.parametrize("the_date, date_period, path", [
+        (Date('2017-10-01'), DatePeriodType.QUARTER, ['Q','2017', 'QTR4', 'master.idx']),
+        (Date('2018-01-01'), DatePeriodType.QUARTER, ['Q','2018', 'QTR1', 'master.idx']),
+        (Date('2017-10-01'), DatePeriodType.DAY,     ['D','2017', 'QTR4', 'master20171001.idx']),
+        (Date('2017-11-20'), DatePeriodType.DAY,     ['D','2017', 'QTR4', 'master20171120.idx']),
+        (Date('2018-01-25'), DatePeriodType.DAY,     ['D','2018', 'QTR1', 'master20180125.idx']),
+    ])
+    def test_find_object_success(self, edgar_fs: tempfile.TemporaryDirectory, the_date: Date, date_period: DatePeriodType, path: List[str]):
+        root: Path = Path(edgar_fs.name)
+        fs: FileRepoFS = FileRepoFS(root, self.REPO_FORMAT)
+        obj: FileRepoObject = fs.find(date_period, the_date)
+        assert obj.subpath(4) == path
 
     def test_check_updates(self, edgar_fs: tempfile.TemporaryDirectory):
         root: Path = Path(edgar_fs.name)

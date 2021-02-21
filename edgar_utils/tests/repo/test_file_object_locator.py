@@ -34,8 +34,8 @@ class TestFileObjectLocator(object):
         (['Q', '2020', 'QTR1', 'file-1.txt'], 'Q/2020/QTR1/file-1.txt'),
         (['Q', '2020', 'QTR3', 'file-2.txt'], 'Q/2020/QTR3/file-2.txt'),
     ])    
-    def test_locate_success(self,  fs_root: tempfile.TemporaryDirectory, path_list: List[str], expected_result: str):
-        root: Path = Path(fs_root.name)
+    def test_locate_success(self,  test_fs: tempfile.TemporaryDirectory, path_list: List[str], expected_result: str):
+        root: Path = Path(test_fs.name)
         dir: FileRepoDir = FileRepoDir(root)
         loc: FileObjectLocator = FileObjectLocator.locate(dir.get(path_list), FileObjectLocator.DEFAULT_PATH_SPEC)
         assert str(loc) == expected_result
