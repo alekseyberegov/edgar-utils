@@ -39,13 +39,22 @@ class TestFileObjectLocator(object):
         dir: FileRepoDir = FileRepoDir(root)
         loc: FileObjectLocator = FileObjectLocator.locate(dir.get(path_list), FileObjectLocator.DEFAULT_PATH_SPEC)
         assert str(loc) == expected_result
+    
+    @pytest.mark.parametrize("path, parent", [
+        (['Q','1972','QTR4','master19721213.idx'], 'Q/1972/QTR4'),
+        (['Q','2020','QTR1','master20200105.idx'], 'Q/2020/QTR1'),
+        (['D','2020','QTR1','master20200125.idx'], 'D/2020/QTR1'),
+    ])    
+    def test_parent_success(self, path:List[str], parent:str):
+        loc: FileObjectLocator = FileObjectLocator(path, FileObjectLocator.DEFAULT_PATH_SPEC)
+        assert loc.parent() == parent
         
     @pytest.mark.parametrize("path, date_period, quarter, year, date_str", [
         (['Q','1972','QTR4','master19721213.idx'], 'Q', 'QTR4', '1972', '1972-12-13'),
         (['Q','2020','QTR1','master20200105.idx'], 'Q', 'QTR1', '2020', '2020-01-05'),
         (['D','2020','QTR1','master20200125.idx'], 'D', 'QTR1', '2020', '2020-01-25'),
     ])    
-    def test_getitem(self, path:str, date_period: str, quarter: str, year: int, date_str: str) -> None:
+    def test_getitem(self, path:List[str], date_period: str, quarter: str, year: int, date_str: str) -> None:
         loc: FileObjectLocator = FileObjectLocator(path, FileObjectLocator.DEFAULT_PATH_SPEC)
         assert loc[0] == date_period
         assert loc[1] == year

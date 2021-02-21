@@ -2,7 +2,7 @@ import pytest
 import tempfile
 import time
 
-from edgar_utils.repo.repo_fs import RepoFormat
+from edgar_utils.repo.repo_fs import RepoFormat, RepoObject
 from edgar_utils.date.date_utils import DatePeriodType, Date
 from typing import Dict, Iterator, List
 from pathlib import Path
@@ -51,10 +51,10 @@ class TestFileRepoFS(object):
         obj: FileRepoObject = fs.get_object(obj_path)
         assert obj is None
 
-    def test_get_update_list(self, edgar_fs: tempfile.TemporaryDirectory):
+    def test_check_updates(self, edgar_fs: tempfile.TemporaryDirectory):
         root: Path = Path(edgar_fs.name)
         fs: FileRepoFS = FileRepoFS(root, self.REPO_FORMAT)
-        miss: List[str] = fs.get_update_list(Date('2017-09-10'), Date('2019-05-25'))
+        miss: List[str] = fs.check_updates(Date('2017-09-10'), Date('2019-05-25'))
             
         holidays_sample: List[Date] = [
                 Date('2018-01-01'), Date('2018-01-15'), Date('2018-02-19'),
@@ -93,4 +93,18 @@ class TestFileRepoFS(object):
         assert obj is not None
         assert obj.subpath(4) == expected_result
 
+    @pytest.mark.parametrize("path, period_str, date_str", [
+        (['Q','1972','QTR4','master.idx'], 'Q', '1972-12-13'),
+        (['Q','1974','QTR1','master.idx'], 'Q', '1974-02-13'),
+        (['D','2020','QTR1','master20200105.idx'], 'D', '2020-01-05'),
+        (['D','2020','QTR2','master20200425.idx'], 'D', '2020-04-25'),
+    ])   
+    def test_create(self, edgar_fs: tempfile.TemporaryDirectory, path: List[str], period_str: str, date_str: str) -> None:
+        root: Path = Path(edgar_fs.name)
+        fs: FileRepoFS = FileRepoFS(root, self.REPO_FORMAT)
+        the_date: Date = Date(date_str)
+        date_period: DatePeriodType = DatePeriodType.from_string(period_str)
+        obj: FileRepoObject = fs.create(date_period, the_date)
+        assert obj is not None
+        assert obj.subpath(4) == path
 

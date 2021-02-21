@@ -218,31 +218,39 @@ class FileObjectLocator(object):
 
     @staticmethod
     def from_date(date_period: DatePeriodType, the_date: Date, 
-            objectname_spec: str, path_spec: List[str]) -> 'FileObjectLocator':
+            name_spec: str, path_spec: List[str]) -> 'FileObjectLocator':
         """
         Get an object locator for the given date using the provided name specification
 
         Parameters
         ----------
         date_period: `DatePeriodType`
-                the date period: day or quarter
+            the date period: day or quarter
         the_date: `Date`
-                the date
-        objectname_spec: `str`
-                the object name specification
+            the date
+        name_spec: `str`
+            the object name specification
         path_spec: `List[str]`
-                the path specification
+            the object path specification
 
         Returns
         -------
         FileObjectLocator
-                the locator
+            the file object locator
         """
-        path: List[str] = [the_date.format(spec, date_period) for spec in path_spec]
-        path.append(the_date.format(objectname_spec, date_period))    
-        return FileObjectLocator(path, path_spec)
+        parts: List[str] = [the_date.format(spec, date_period) for spec in path_spec]
+        parts.append(the_date.format(name_spec, date_period))    
+        return FileObjectLocator(parts, path_spec)
 
     def __len__(self) -> int:
+        """
+            Returns the length of the path or object uri
+
+            Returns
+            -------
+            int
+                the length of the path or object uri
+        """
         return len(self.path)
 
     def __str__(self) -> str:
@@ -260,12 +268,20 @@ class FileObjectLocator(object):
         """
             Returns the key's element of the locator
 
+            Parameters
+            ----------
+            key: index or slice
+
             Returns
             -------
             str
                 the key's element of the locator
         """
-        return self.path[int(key)]
+        if isinstance(key, slice):
+            indices = range(*key.indices(len(self.path)))
+            return [self.path[i] for i in indices]
+        else:
+            return self.path[int(key)]
 
     def __iter__(self):
         """
@@ -277,6 +293,16 @@ class FileObjectLocator(object):
                 the iterator
         """
         return iter(self.path)
+
+    def parent(self):
+        """
+            Returns the parent path
+
+            Returns
+            -------
+            the parent path
+        """
+        return os.path.sep.join(self[:-1])
 
     def year(self) -> int:
         """
@@ -348,16 +374,16 @@ class FileObjectLocator(object):
 
         for s in self.spec:
             if macro in s:
-                return parse(s, self.path[i])[param_name]
+                return parse(s, self[i])[param_name]
             i += 1
         return None
             
 
 class FileRepoFS(RepoFS, FileRepoDirVisitor):
-    def __init__(self, dir: Path, repo_format: RepoFormat) -> None:
-        self.__root : FileRepoDir = FileRepoDir(dir)
-        self.__repo_format: RepoFormat = repo_format
-        self.__indices: Dict[str, FileRepoObject] = {}
+    def __init__(self, root: Path, format: RepoFormat) -> None:
+        self.__root     : FileRepoDir = FileRepoDir(root)
+        self.__format   : RepoFormat = format
+        self.__index    : Dict[str, FileRepoObject] = {}
 
     def list_years(self, period_type: DatePeriodType) -> List[int]:
         """
@@ -370,7 +396,7 @@ class FileRepoFS(RepoFS, FileRepoDirVisitor):
         """
         return [int(name) for (name, _) in self.__root[str(period_type)]]
 
-    def get_update_list(self, from_date: Date, to_date: Date) -> List[str]:
+    def check_updates(self, from_date: Date, to_date: Date) -> List[str]:
         """
             Identifies objects that are not in the repository or need to be updated for the given dates
 
@@ -403,11 +429,11 @@ class FileRepoFS(RepoFS, FileRepoDirVisitor):
                 in_y, in_q = y, 0
 
             if not (d.is_weekend() or d in h):
-                o: str = self._path(DatePeriodType.DAY, d)
-                if o not in self.__indices:
+                o: str = str(self._path(DatePeriodType.DAY, d))
+                if o not in self.__index:
                     if q != in_q:
                         # Add a quartely file to the update list only if it has not been added before
-                        u.append(self._path(DatePeriodType.QUARTER, d))
+                        u.append(str(self._path(DatePeriodType.QUARTER, d)))
                         in_q = q
 
                     # Add a daily file to the update list
@@ -418,24 +444,26 @@ class FileRepoFS(RepoFS, FileRepoDirVisitor):
 
         return u
 
-    def _path(self, period: DatePeriodType, the_date: Date) -> str:
-        return str(FileObjectLocator.from_date(
-            period, 
-            the_date, 
-            self.__repo_format.object_specs[period],  
-            self.__repo_format.path_spec)
-        )
+    def _path(self, date_period: DatePeriodType, the_date: Date) -> FileObjectLocator:
+        return FileObjectLocator.from_date(date_period, the_date, 
+            self.__format.name_spec[date_period],  
+            self.__format.path_spec)
 
-    def get_object(self, rel_path: str) -> RepoObject:
+    def get_object(self, obj_uri: str) -> RepoObject:
         """
             Get a repo object at the given relative path
+
+            Parameters
+            ----------
+            obj_uri: str
+                the object URI
 
             Returns
             -------
             RepoObject | None
                 the repo objet at the given path. If no object is found then None is returned
         """
-        loc: FileObjectLocator = FileObjectLocator(rel_path, self.__repo_format.path_spec)
+        loc: FileObjectLocator = FileObjectLocator(obj_uri, self.__format.path_spec)
         e: RepoEntity = self.__root
         for i in loc:
             if i in e:
@@ -444,15 +472,15 @@ class FileRepoFS(RepoFS, FileRepoDirVisitor):
                return None
         return e
 
-    def new_object(self, rel_path: str, object_name: str) -> RepoObject:
+    def new_object(self, obj_path: str, obj_name: str) -> RepoObject:
         """
             Creates a new object at the provided path
 
             Parameters
             ----------
-            real_path: str
+            obj_path: str
                 the path to the object
-            object_name: str
+            obj_name: str
                 the object name
 
             Returns
@@ -460,7 +488,7 @@ class FileRepoFS(RepoFS, FileRepoDirVisitor):
             RepoObject
                 the newly created repo object
         """
-        loc: FileObjectLocator = FileObjectLocator(rel_path, self.__repo_format.path_spec)
+        loc: FileObjectLocator = FileObjectLocator(obj_path, self.__format.path_spec)
         e: RepoEntity = self.__root
 
         for i in range(len(loc)):
@@ -470,17 +498,54 @@ class FileRepoFS(RepoFS, FileRepoDirVisitor):
             else:
                 e = e[name]
         
-        return e.new_object(object_name)
+        return e.new_object(obj_name)
+
+    def find(self, date_period: DatePeriodType, the_date: Date) -> RepoObject:
+        """
+            Finds an object for the given date and period type
+
+            Parameters
+            ----------
+            date_period: DatePeriodType
+                the date period type            
+            the_date: Date
+                the date
+
+            Returns
+            -------
+            RepoObject
+                the object
+        """
+        return self.get_object(str(self._path(date_period, the_date)))
+
+    def create(self, date_period: DatePeriodType, the_date: Date) -> RepoObject:
+        """
+            Creates an object for the given date and period type
+
+            Parameters
+            ----------
+            date_period: DatePeriodType
+                the period type
+            the_date: Date
+                the date
+
+            Returns
+            -------
+            RepoObject
+            
+        """
+        p: FileObjectLocator = self._path(date_period, the_date)
+        return self.new_object(p.parent(), p[-1])
 
     def refresh(self) -> None:
         """
             Synchronizes the FS with physical data
         """
-        self.__indices.clear()
+        self.__index.clear()
         self.__root.refresh()
         self.__root.visit(self)
 
-    def visit(self, object: FileRepoObject) -> bool:        
-        loc: FileObjectLocator = FileObjectLocator.locate(object, self.__repo_format.path_spec)
-        self.__indices[str(loc)] = object
+    def visit(self, obj: FileRepoObject) -> bool:        
+        loc: FileObjectLocator = FileObjectLocator.locate(obj, self.__format.path_spec)
+        self.__index[str(loc)] = obj
         return True

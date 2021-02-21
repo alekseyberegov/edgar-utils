@@ -1,8 +1,8 @@
 import abc
+from dataclasses import dataclass
 from typing import Tuple, Iterator, Generator, List, Dict
 
 from edgar_utils.date.date_utils import Date, DatePeriodType
-from dataclasses import dataclass
 
 @dataclass
 class RepoFormat:
@@ -20,7 +20,7 @@ class RepoFormat:
         -------- 
         >>> master{y}{m:02}{d:02}.idx
     """
-    object_specs: Dict[DatePeriodType, str] 
+    name_spec: Dict[DatePeriodType, str] 
 
     """
         The path specification for objects in the repository.
@@ -57,15 +57,15 @@ class RepoDir(RepoEntity, metaclass=abc.ABCMeta):
 
 class RepoFS(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def get_update_list(self, from_date: Date, to_date: Date) -> List[str]:
+    def check_updates(self, from_date: Date, to_date: Date) -> List[str]:
         pass
 
     @abc.abstractmethod
-    def get_object(self, rel_path: str) -> RepoObject:
+    def find(self, date_period: DatePeriodType, the_date: Date) -> RepoObject:        
         pass
 
     @abc.abstractmethod
-    def new_object(self, rel_path: str, object_name: str) -> RepoObject:
+    def create(self, date_period: DatePeriodType, the_date: Date) -> RepoObject:
         pass
 
     @abc.abstractmethod
