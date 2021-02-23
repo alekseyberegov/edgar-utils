@@ -13,13 +13,13 @@ class TestFileRepoObject(object):
         dir: FileRepoDir = FileRepoDir(Path(dir_prepped.name))
         obj: FileRepoObject = FileRepoObject(dir, name)
 
-        assert obj.path.name == name
-        assert obj.parent == dir
+        assert obj.__path.name == name
+        assert obj.__parent == dir
         assert not obj.exists()
         assert name in dir.children
         assert len(dir) == len(YEAR_LIST) + 1
 
-    def test_write_content(self, dir_empty: tempfile.TemporaryDirectory, fake: Faker) -> None:
+    def test_out(self, dir_empty: tempfile.TemporaryDirectory, fake: Faker) -> None:
         name: str = fake.file_name(extension = 'csv')
         content: List[str] = fake.random_elements(elements=('a', 'b', 'c', 'd'), length=20, unique=False)
         input: MagicMock = MagicMock()
@@ -27,13 +27,13 @@ class TestFileRepoObject(object):
 
         dir: FileRepoDir = FileRepoDir(Path(dir_empty.name))
         obj: FileRepoObject = FileRepoObject(dir, name) 
-        obj.write_content(iter(input))
+        obj.out(iter(input))
 
         assert obj.exists()
-        with open(obj.path, "r") as f:
+        with open(obj.__path, "r") as f:
             assert ''.join(content) == f.read()
 
-    def test_write_content_file_exists(self, dir_empty: tempfile.TemporaryDirectory, fake: Faker) -> None:
+    def test_out_file_exists(self, dir_empty: tempfile.TemporaryDirectory, fake: Faker) -> None:
         name: str = fake.file_name(extension = 'csv')
         content: List[str] = fake.random_elements(elements=('a', 'b', 'c', 'd'), length=20, unique=False)
         input: MagicMock = MagicMock()
@@ -42,14 +42,14 @@ class TestFileRepoObject(object):
         dir: FileRepoDir = FileRepoDir(Path(dir_empty.name))
         obj: FileRepoObject = FileRepoObject(dir, name) 
 
-        with obj.path.open(mode = "w", buffering = 2048) as f:
+        with obj.__path.open(mode = "w", buffering = 2048) as f:
             f.write(''.join(content))
 
         with pytest.raises(FileExistsError): 
-            obj.write_content(iter(input))
+            obj.out(iter(input))
             raise False
     
-    def test_write_content_override(self, dir_empty: tempfile.TemporaryDirectory, fake: Faker) -> None:
+    def test_out_overwrite(self, dir_empty: tempfile.TemporaryDirectory, fake: Faker) -> None:
         name: str = fake.file_name(extension = 'csv')
         input: MagicMock = MagicMock()
 
@@ -57,14 +57,14 @@ class TestFileRepoObject(object):
         obj: FileRepoObject = FileRepoObject(dir, name) 
 
         input.__iter__.return_value = fake.random_elements(elements=('a', 'b', 'c', 'd'), length=20, unique=False)
-        obj.write_content(input)
+        obj.out(input)
 
         input.__iter__.return_value = fake.random_elements(elements=('e', 'f', 'g', 'k'), length=20, unique=False)
-        obj.write_content(input, override=True)
+        obj.out(input, override=True)
 
         assert obj.exists()
-        assert obj.path.name == name
-        with open(obj.path, "r") as f:
+        assert obj.__path.name == name
+        with open(obj.__path, "r") as f:
             assert ''.join(input.__iter__.return_value) == f.read()
 
     @pytest.mark.parametrize("content_size, chunk_size", [
@@ -73,19 +73,19 @@ class TestFileRepoObject(object):
         (1024, 4096),
         (4096, 4096),
     ])
-    def test_iter_content(self, dir_empty: tempfile.TemporaryDirectory, fake: Faker, content_size: int, chunk_size: int) -> None:
+    def test_inp(self, dir_empty: tempfile.TemporaryDirectory, fake: Faker, content_size: int, chunk_size: int) -> None:
         name: str = fake.file_name(extension = 'xml')
         content: str = ''.join(fake.random_elements(elements=('a', 'b', 'c', 'd'), length=content_size, unique=False))
 
         dir: FileRepoDir = FileRepoDir(Path(dir_empty.name))
         obj: FileRepoObject = FileRepoObject(dir, name) 
 
-        with obj.path.open(mode = "w", buffering = 2048) as f:
+        with obj.__path.open(mode = "w", buffering = 2048) as f:
             f.write(content)
 
         count: int = 0
         result: str = ""
-        for chunk in obj.iter_content(chunk_size):
+        for chunk in obj.inp(chunk_size):
             assert content[count * chunk_size: (count + 1) * chunk_size] == chunk
             result += chunk
             count += 1
@@ -93,10 +93,10 @@ class TestFileRepoObject(object):
         assert count == content_size // chunk_size + (1 if content_size % chunk_size > 0 else 0)
         assert content == result
         
-    def test_iter_content_no_file(self, dir_empty: tempfile.TemporaryDirectory, fake: Faker) -> None:
+    def test_inp_no_file(self, dir_empty: tempfile.TemporaryDirectory, fake: Faker) -> None:
         dir: FileRepoDir = FileRepoDir(Path(dir_empty.name))
         obj: FileRepoObject = FileRepoObject(dir, fake.file_name(extension = 'xml')) 
 
         with pytest.raises(FileNotFoundError):
-            for chunk in obj.iter_content(512):
+            for chunk in obj.inp(512):
                 assert False

@@ -35,11 +35,11 @@ class RepoEntity(metaclass=abc.ABCMeta):
 
 class RepoObject(RepoEntity, metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def iter_content(self, bufsize: int) -> Generator[str, None, None]:
+    def inp(self, bufsize: int) -> Generator[str, None, None]:
         pass
 
     @abc.abstractmethod
-    def write_content(self, iter: Iterator, override: bool = False) -> None:
+    def out(self, iter: Iterator, override: bool = False) -> None:
         pass
 
     @abc.abstractmethod

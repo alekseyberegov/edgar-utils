@@ -48,7 +48,6 @@ class TestFileRepoFS(object):
         obj: FileRepoObject = fs.get_object(obj_path)
         assert obj is None
 
-    # ['2017-QTR4-92', '2018-QTR1-25']
     @pytest.mark.parametrize("the_date, date_period, path", [
         (Date('2017-10-01'), DatePeriodType.QUARTER, ['Q','2017', 'QTR4', 'master.idx']),
         (Date('2018-01-01'), DatePeriodType.QUARTER, ['Q','2018', 'QTR1', 'master.idx']),

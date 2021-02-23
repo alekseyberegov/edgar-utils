@@ -125,21 +125,21 @@ class FileRepoDir(RepoDir):
         return p
 
 class FileRepoObject(RepoObject):
-    def __init__(self, parent: FileRepoDir, name: str) -> None:
-        self.path: Path = parent.path / name
-        self.parent: FileRepoDir = parent
-        parent[name] = self
+    def __init__(self, parent: FileRepoDir, obj_name: str) -> None:
+        self.__path: Path = parent.path / obj_name
+        self.__parent: FileRepoDir = parent
+        parent[obj_name] = self
 
-    def iter_content(self, bufsize: int) -> Generator[str, None, None]:
-        with self.path.open(mode = "r", buffering=bufsize) as f:
+    def inp(self, bufsize: int) -> Generator[str, None, None]:
+        with self.__path.open(mode = "r", buffering=bufsize) as f:
             while True:
                 chunk = f.read(bufsize)
                 if len(chunk) == 0:
                     break
                 yield chunk
 
-    def write_content(self, iter: Iterator, override: bool = False) -> None:
-        file: Path = self.path if not override else self.path.with_suffix('.new')
+    def out(self, iter: Iterator, override: bool = False) -> None:
+        file: Path = self.__path if not override else self.__path.with_suffix('.new')
         
         open_flags = (os.O_CREAT | os.O_EXCL | os.O_RDWR)
         open_mode  = 0o644
@@ -150,21 +150,29 @@ class FileRepoObject(RepoObject):
                 f.write(bytes)
 
         if override:
-            file.rename(self.path)
+            file.rename(self.__path)
 
     def subpath(self, levels: int) -> List[str]:
-        p: List[str] = self.parent.subpath(levels - 1) if levels > 1 else []
-        p.append(self.path.name)
+        p: List[str] = self.__parent.subpath(levels - 1) if levels > 1 else []
+        p.append(self.__path.name)
         return p
+    
+    @property
+    def path(self) -> Path:
+        return self.__path
 
+    @property
+    def parent(self) -> FileRepoDir:
+        return self.__parent
+    
     def exists(self) -> bool:
-        return self.path.exists()
+        return self.__path.exists()
 
     def __eq__(self, o: object) -> bool:
-       return isinstance(o, FileRepoObject) and self.path == o.path
+       return isinstance(o, FileRepoObject) and self.__path == o.__path
 
     def __str__(self) -> str:
-        return str(self.path)
+        return str(self.__path)
 
 
 class FileRepoDirVisitor(metaclass=abc.ABCMeta):
