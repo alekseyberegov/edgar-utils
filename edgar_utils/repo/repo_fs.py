@@ -55,6 +55,10 @@ class RepoDir(RepoEntity, metaclass=abc.ABCMeta):
     def new_dir(self, name: str) -> 'RepoDir':
         pass
 
+    @abc.abstractmethod
+    def refresh(self) -> None:
+        pass
+
 class RepoFS(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def check_updates(self, from_date: Date, to_date: Date) -> List[str]:

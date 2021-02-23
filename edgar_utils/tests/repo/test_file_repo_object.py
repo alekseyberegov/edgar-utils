@@ -13,8 +13,8 @@ class TestFileRepoObject(object):
         dir: FileRepoDir = FileRepoDir(Path(dir_prepped.name))
         obj: FileRepoObject = FileRepoObject(dir, name)
 
-        assert obj.__path.name == name
-        assert obj.__parent == dir
+        assert obj.path.name == name
+        assert obj.parent == dir
         assert not obj.exists()
         assert name in dir.children
         assert len(dir) == len(YEAR_LIST) + 1
@@ -30,7 +30,7 @@ class TestFileRepoObject(object):
         obj.out(iter(input))
 
         assert obj.exists()
-        with open(obj.__path, "r") as f:
+        with open(obj.path, "r") as f:
             assert ''.join(content) == f.read()
 
     def test_out_file_exists(self, dir_empty: tempfile.TemporaryDirectory, fake: Faker) -> None:
@@ -42,7 +42,7 @@ class TestFileRepoObject(object):
         dir: FileRepoDir = FileRepoDir(Path(dir_empty.name))
         obj: FileRepoObject = FileRepoObject(dir, name) 
 
-        with obj.__path.open(mode = "w", buffering = 2048) as f:
+        with obj.path.open(mode = "w", buffering = 2048) as f:
             f.write(''.join(content))
 
         with pytest.raises(FileExistsError): 
@@ -63,8 +63,8 @@ class TestFileRepoObject(object):
         obj.out(input, override=True)
 
         assert obj.exists()
-        assert obj.__path.name == name
-        with open(obj.__path, "r") as f:
+        assert obj.path.name == name
+        with open(obj.path, "r") as f:
             assert ''.join(input.__iter__.return_value) == f.read()
 
     @pytest.mark.parametrize("content_size, chunk_size", [
@@ -80,7 +80,7 @@ class TestFileRepoObject(object):
         dir: FileRepoDir = FileRepoDir(Path(dir_empty.name))
         obj: FileRepoObject = FileRepoObject(dir, name) 
 
-        with obj.__path.open(mode = "w", buffering = 2048) as f:
+        with obj.path.open(mode = "w", buffering = 2048) as f:
             f.write(content)
 
         count: int = 0
