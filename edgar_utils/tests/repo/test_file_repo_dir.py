@@ -72,15 +72,15 @@ class TestFileRepoDir(object):
         for actual in objects:
             assert actual == str(next(expected))
 
-    @pytest.mark.parametrize("path_list, expected_result", [
+    @pytest.mark.parametrize("path_list, expected_path", [
         (['Q', '2020', 'QTR1', 'file-0.txt'],  'Q/2020/QTR1/file-0.txt' ),
         (['Q', '2020', 'QTR3', 'file-1.txt'],  'Q/2020/QTR3/file-1.txt' ),
     ])
-    def test_get_success(self, test_fs: tempfile.TemporaryDirectory, path_list: List[str], expected_result: str):
+    def test_get_success(self, test_fs: tempfile.TemporaryDirectory, path_list: List[str], expected_path: str):
         root: Path = Path(test_fs.name)
         dir: FileRepoDir = FileRepoDir(root)
         obj: FileRepoObject = dir.get(path_list)
-        assert  root / expected_result == obj.path
+        assert  (root / expected_path).resolve() == obj.path
 
     @pytest.mark.parametrize("path_list", [
         (['Q', '2200', 'QTR1', 'file-0.txt']),

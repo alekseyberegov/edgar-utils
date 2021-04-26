@@ -36,7 +36,7 @@ class TestFileRepoFS(object):
         fs: FileRepoFS = FileRepoFS(root, self.REPO_FORMAT)
         obj: FileRepoObject = fs.get_object(obj_path)
         assert obj is not None
-        assert obj.path == root / obj_path
+        assert obj.path == (root / obj_path).resolve()
 
     @pytest.mark.parametrize("obj_path", [
         ('Q/2010/QTR1/file-0.txt'),
