@@ -3,7 +3,7 @@ from setuptools import find_packages
 
 setup(
     name='edgar-utils',
-    version='0.0.2',
+    version='0.0.3',
     author='Aleksey Beregov',
     author_email='beregov@teladictum.com',
     packages=find_packages(include=['edgar_utils']),
@@ -12,6 +12,7 @@ setup(
     license='LICENSE.txt',
     description='Utils to load financials filing from Edgar',
     long_description=open('README.md').read(),
+    long_description_content_type="text/markdown",
     install_requires=[
         "pytest",
         "pytest-cov",
