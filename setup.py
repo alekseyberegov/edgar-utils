@@ -1,12 +1,13 @@
 from setuptools import setup
 from setuptools import find_packages
 
+
 setup(
     name='edgar-utils',
-    version='0.0.3',
+    version='0.0.4',
     author='Aleksey Beregov',
     author_email='beregov@teladictum.com',
-    packages=find_packages(include=['edgar_utils']),
+    packages=find_packages(include=['*']),
     python_requires='>=3.6',
     url='https://pypi.org/project/edgar-utils/',
     license='LICENSE.txt',

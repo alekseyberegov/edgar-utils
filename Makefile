@@ -7,7 +7,7 @@ help:
 
 .PHONY: distro.build
 distro.build:  ## Build the wheel distribution
-	python setup.py bdist_wheel
+	python3 setup.py bdist_wheel
 
 .PHONY: distro.push
 distro.push:  ## Push the distribution
