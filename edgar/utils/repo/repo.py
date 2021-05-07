@@ -1,5 +1,4 @@
-from edgar_utils.repo.repo_fs import RepoFS
-from pathlib import Path
+from edgar.utils.repo.repo_fs import RepoFS
 from edgar.utils.repo.repo_fs import RepoFS
 
 class Repo(object):

@@ -9,7 +9,9 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 from faker import Faker
-from edgar.utils.repo.file_repo_fs import FileObjectLocator, FileRepoDir, FileRepoFS, FileRepoObject
+from edgar.utils.repo.file_repo_fs import FileRepoFS
+from edgar.utils.repo.file_object_locator import FileObjectLocator
+from edgar.utils.repo.file_repo_object import FileRepoObject
 from edgar.tests.globals import YEAR_LIST
 
 

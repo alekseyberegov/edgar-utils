@@ -5,7 +5,8 @@ from unittest.mock import MagicMock
 from pathlib import Path
 from typing import Dict, List, Iterator
 from datetime import datetime, timedelta
-from edgar.utils.repo.file_repo_fs import FileRepoDir, FileRepoObject
+from edgar.utils.repo.file_repo_object import FileRepoObject
+from edgar.utils.repo.file_repo_dir import FileRepoDir
 from edgar.tests.globals import YEAR_LIST, FILE_PER_DIR
 
 

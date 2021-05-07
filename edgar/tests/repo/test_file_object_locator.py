@@ -2,7 +2,8 @@ import pytest, tempfile
 from typing import List
 from pathlib import Path
 
-from edgar.utils.repo.file_repo_fs import FileRepoDir, FileObjectLocator
+from edgar.utils.repo.file_object_locator import FileObjectLocator
+from edgar.utils.repo.file_repo_dir import FileRepoDir
 from edgar.utils.date.date_utils import Date, DatePeriodType
 
 class TestFileObjectLocator(object):
