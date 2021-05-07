@@ -1,7 +1,7 @@
 import pytest
 
-from edgar_utils.backfill.optimization_files import MinimizeDownloadsBackfill
-from edgar_utils.date.date_utils import Date, DatePeriod, DatePeriodType
+from edgar.utils.backfill.optimization_files import MinimizeDownloadsBackfill
+from edgar.utils.date.date_utils import Date, DatePeriod, DatePeriodType
 from typing import List
 
 class TestMinimizeDownloadsBackfill(object):

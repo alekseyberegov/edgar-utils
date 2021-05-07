@@ -1,6 +1,6 @@
 import pytest
-from edgar_utils.date.holidays import us_holidays
-from edgar_utils.date.date_utils import Date
+from edgar.utils.date.holidays import us_holidays
+from edgar.utils.date.date_utils import Date
 from typing import Dict
 
 class TestHolidays(object):

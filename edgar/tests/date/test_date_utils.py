@@ -1,6 +1,6 @@
 import pytest
 
-from edgar_utils.date.date_utils import Date, DatePeriod, DatePeriodException, ONE_DAY, DatePeriodType
+from edgar.utils.date.date_utils import Date, DatePeriod, DatePeriodException, ONE_DAY, DatePeriodType
 from datetime import date, timedelta
 from typing import Dict
 

@@ -2,15 +2,15 @@ import pytest
 import tempfile
 import time
 
-from edgar_utils.repo.repo_fs import RepoFormat, RepoObject
-from edgar_utils.date.date_utils import DatePeriodType, Date
+from edgar.utils.repo.repo_fs import RepoFormat, RepoObject
+from edgar.utils.date.date_utils import DatePeriodType, Date
 from typing import Dict, Iterator, List
 from pathlib import Path
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 from faker import Faker
-from edgar_utils.repo.file_repo_fs import FileObjectLocator, FileRepoDir, FileRepoFS, FileRepoObject
-from edgar_utils.tests.globals import YEAR_LIST
+from edgar.utils.repo.file_repo_fs import FileObjectLocator, FileRepoDir, FileRepoFS, FileRepoObject
+from edgar.tests.globals import YEAR_LIST
 
 
 class TestFileRepoFS(object):    

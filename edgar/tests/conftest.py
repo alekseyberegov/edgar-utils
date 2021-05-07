@@ -2,9 +2,9 @@ import pytest, tempfile
 from faker import Faker
 from pathlib import Path
 from datetime import date
-from edgar_utils.date.date_utils import Date, DatePeriodType
+from edgar.utils.date.date_utils import Date, DatePeriodType
 from typing import List
-from edgar_utils.tests.globals import YEAR_LIST, QUARTER_LIST, FILE_PER_DIR, EDGAR_QUARTER
+from edgar.tests.globals import YEAR_LIST, QUARTER_LIST, FILE_PER_DIR, EDGAR_QUARTER
 
 @pytest.fixture
 def fake():

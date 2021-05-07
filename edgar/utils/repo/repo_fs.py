@@ -2,7 +2,7 @@ import abc
 from dataclasses import dataclass
 from typing import Tuple, Iterator, Generator, List, Dict
 
-from edgar_utils.date.date_utils import Date, DatePeriodType
+from edgar.utils.date.date_utils import Date, DatePeriodType
 
 @dataclass
 class RepoFormat:

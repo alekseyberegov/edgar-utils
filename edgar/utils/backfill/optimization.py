@@ -1,7 +1,7 @@
 import abc
 
 from typing import List
-from edgar_utils.date.date_utils import DatePeriod
+from edgar.utils.date.date_utils import DatePeriod
 
 class BackfillOptimization(metaclass=abc.ABCMeta):
     @abc.abstractmethod

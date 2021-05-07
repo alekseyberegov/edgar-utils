@@ -1,6 +1,6 @@
 from typing import List, Dict
 from datetime import date
-from edgar_utils.date.date_utils import Date
+from edgar.utils.date.date_utils import Date
 
 # https://www.opm.gov/policy-data-oversight/pay-leave/federal-holidays/#url=2020
 # This holiday is designated as "Washington’s Birthday" in section 6103(a) of title 5 of the United States Code, which is the

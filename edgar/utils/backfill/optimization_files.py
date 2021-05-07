@@ -1,7 +1,7 @@
 from typing import List
 
-from edgar_utils.backfill.optimization import BackfillOptimization
-from edgar_utils.date.date_utils import DatePeriod, DatePeriodType
+from edgar.utils.backfill.optimization import BackfillOptimization
+from edgar.utils.date.date_utils import DatePeriod, DatePeriodType
 
 class MinimizeDownloadsBackfill(BackfillOptimization):
     def __init__(self, max_days: int = 15) -> None:

@@ -1,7 +1,7 @@
 from sys import path
-from edgar_utils.repo.repo_fs import RepoDir, RepoObject, RepoFS, RepoEntity, RepoFormat
-from edgar_utils.date.date_utils import Date, DatePeriodType
-from edgar_utils.date.holidays import us_holidays
+from edgar.utils.repo.repo_fs import RepoDir, RepoObject, RepoFS, RepoEntity, RepoFormat
+from edgar.utils.date.date_utils import Date, DatePeriodType
+from edgar.utils.date.holidays import us_holidays
 from pathlib import Path
 from datetime import date
 from typing import Dict, Generator, Iterator, Tuple, List, Union

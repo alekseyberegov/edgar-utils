@@ -4,8 +4,8 @@ from pathlib import Path
 from faker import Faker
 from unittest.mock import MagicMock
 from typing import List
-from edgar_utils.repo.file_repo_fs import FileRepoDir, FileRepoObject
-from edgar_utils.tests.globals import YEAR_LIST
+from edgar.utils.repo.file_repo_fs import FileRepoDir, FileRepoObject
+from edgar.tests.globals import YEAR_LIST
 
 class TestFileRepoObject(object):
     def test_init(self, dir_prepped: tempfile.TemporaryDirectory, fake: Faker) -> None:
