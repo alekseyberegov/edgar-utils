@@ -3,8 +3,8 @@ from setuptools import find_packages
 
 
 setup(
-    name=open('edgar-utils.version').read(),
-    version='0.0.4',
+    name='edgar-utils',
+    version=open('edgar-utils.version').read(),
     author='Aleksey Beregov',
     author_email='beregov@teladictum.com',
     packages=find_packages(include=['*']),
