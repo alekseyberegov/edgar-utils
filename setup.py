@@ -3,7 +3,7 @@ from setuptools import find_packages
 
 
 setup(
-    name='edgar-utils',
+    name=open('edgar-utils.version').read(),
     version='0.0.4',
     author='Aleksey Beregov',
     author_email='beregov@teladictum.com',
@@ -25,14 +25,11 @@ setup(
     classifiers=[
         # 3 - Alpha, 4 - Beta, 5 - Production/Stable
         'Development Status :: 4 - Beta',
-
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Build Tools',
-
         # Pick your license as you wish (should match "license" above)
         'License :: OSI Approved :: MIT License',
-
         # Specify the Python versions you support here.
         'Programming Language :: Python :: 3.6',
     ],
