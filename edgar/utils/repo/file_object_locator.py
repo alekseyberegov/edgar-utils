@@ -2,8 +2,7 @@ from edgar.utils.repo.file_repo_object import FileRepoObject
 from edgar.utils.date.date_utils import Date, DatePeriodType
 from datetime import date
 from parse import parse
-from sys import path
-from typing import List, Union
+from typing import Iterator, List, Union
 import os
 
 
@@ -29,18 +28,18 @@ class FileObjectLocator(object):
         spec: `List[str]`
             the path specification
         """
-        self.path = path if isinstance(path, List) else path.split(os.path.sep)
-        self.spec = spec
+        self.path: List[str] = path if isinstance(path, List) else path.split(os.path.sep)
+        self.spec: List[str] = spec
 
     @staticmethod
-    def locate(obj: FileRepoObject, path_spec: List[str]) -> 'FileObjectLocator':
+    def locate(obj: FileRepoObject, spec: List[str]) -> 'FileObjectLocator':
         """Get a locator for the given repo object
 
         Parameters
         ----------
         obj: FileRepoObject
             the repo object for which a locator will be returned
-        path_spec : List[str]
+        spec : List[str]
             the path specification
 
         Returns
@@ -48,11 +47,11 @@ class FileObjectLocator(object):
         FileObjectLocator
             the locator for the given repo object
         """
-        return FileObjectLocator(obj.subpath(len(path_spec) + 1), path_spec)
+        return FileObjectLocator(obj.subpath(len(spec) + 1), spec)
 
     @staticmethod
     def from_date(date_period: DatePeriodType, the_date: Date, 
-            name_spec: str, path_spec: List[str]) -> 'FileObjectLocator':
+            name_spec: str, path_spec: List[str], **kwargs:object) -> 'FileObjectLocator':
         """
         Get an object locator for the given date using the provided name specification
 
@@ -66,15 +65,16 @@ class FileObjectLocator(object):
             the object name specification
         path_spec: `List[str]`
             the object path specification
+        **kwargs: object
+            extra macros for path and file name templates
 
         Returns
         -------
         FileObjectLocator
             the file object locator
         """
-        parts: List[str] = [the_date.format(spec, date_period) for spec in path_spec]
-        parts.append(the_date.format(name_spec, date_period))    
-        return FileObjectLocator(parts, path_spec)
+        return FileObjectLocator([*[the_date.format(spec, date_period, **kwargs) for spec in path_spec], 
+            the_date.format(name_spec, date_period, **kwargs)], path_spec)
 
     def __len__(self) -> int:
         """
@@ -117,7 +117,7 @@ class FileObjectLocator(object):
         else:
             return self.path[int(key)]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator:
         """
             Iterates over the locator's path
 
@@ -128,7 +128,7 @@ class FileObjectLocator(object):
         """
         return iter(self.path)
 
-    def parent(self):
+    def parent(self) -> str:
         """
             Returns the parent path
 

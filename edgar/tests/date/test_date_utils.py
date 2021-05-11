@@ -21,14 +21,14 @@ class TestDatePeriodType(object):
 
 
 class TestDatePeriod(object):
-    @pytest.mark.parametrize("period_str, expected_result", [
+    @pytest.mark.parametrize("period_str, expected", [
         ("D,2020-02-10,2020-03-31", "Q,2020-01-01,2020-03-31"),
         ("D,2020-01-01,2020-03-31", "Q,2020-01-01,2020-03-31"),
     ])
-    def test_expand_to_quarter_success(self, period_str: str, expected_result: str):
+    def test_expand_to_quarter_success(self, period_str: str, expected: str):
         date_period = DatePeriod.from_string(period_str)
         date_period.expand_to_quarter()
-        assert str(date_period) == expected_result
+        assert str(date_period) == expected
 
     @pytest.mark.parametrize("period_str", [
         ("D,2020-02-10,2020-04-30"),
@@ -52,7 +52,7 @@ class TestDate(object):
         with pytest.raises(ValueError):
             date_obj = Date("XXX")  
 
-    @pytest.mark.parametrize("date_str, format_spec, expected_result", [
+    @pytest.mark.parametrize("date_str, format_spec, expected", [
         ("2020-01-01", "QTR{q}", "QTR1"),
         ("2020-12-20", "QTR{q}", "QTR4"),
         ("2020-03-20", "{m:02}", "03"),
@@ -66,9 +66,23 @@ class TestDate(object):
         ("2020-03-07", "{y}-{m:02}-{d:02}", "2020-03-07"),
         ("2020-11-18", "{y}-{m:02}-{d:02}", "2020-11-18"),
     ])
-    def test_format(self, date_str: str, format_spec: str, expected_result: str) -> None:
+    def test_format(self, date_str: str, format_spec: str, expected: str) -> None:
         date_obj = Date(date_str)
-        assert date_obj.format(format_spec) == expected_result
+        assert date_obj.format(format_spec) == expected
+
+    @pytest.mark.parametrize("date_str, date_period_type, args, format_spec, expected", [
+        ("2020-03-07", DatePeriodType.DAY,       {},     "{t} {y}-{m:02}-{d:02}",   "D 2020-03-07"),
+        ("2020-11-18", DatePeriodType.QUARTER,   {},     "{t} {y}-{m:02}-{d:02}",   "Q 2020-11-18"),
+        ("2020-11-18", DatePeriodType.DAY, {"X": 9}, "{X} {t} {y}-{m:02}-{d:02}", "9 D 2020-11-18"),
+    ])
+    def test_format_args(self, 
+            date_str: str, 
+            date_period_type: DatePeriodType, 
+            args: Dict,
+            format_spec: str, 
+            expected: str) -> None:
+        date_obj = Date(date_str)
+        assert date_obj.format(format_spec, date_period_type, **args) == expected
 
     @pytest.mark.parametrize("date_str, expected_result", [
         ("2020-01-01", 1),
