@@ -8,6 +8,7 @@ setup(
     author='Aleksey Beregov',
     author_email='beregov@teladictum.com',
     packages=find_packages(include=['*']),
+    package_data={'edgar.utils.repo': ['properties/*.properties']},
     python_requires='>=3.6',
     url='https://pypi.org/project/edgar-utils/',
     license='LICENSE.txt',

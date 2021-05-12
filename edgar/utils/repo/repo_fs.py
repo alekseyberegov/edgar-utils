@@ -1,6 +1,6 @@
 import abc
 from dataclasses import dataclass
-from typing import Tuple, Iterator, Generator, List, Dict
+from typing import Iterator, List, Dict
 
 from edgar.utils.date.date_utils import Date, DatePeriodType
 
@@ -35,11 +35,11 @@ class RepoEntity(metaclass=abc.ABCMeta):
 
 class RepoObject(RepoEntity, metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def inp(self, bufsize: int) -> Generator[str, None, None]:
+    def inp(self, bufsize: int) -> Iterator[str]:
         pass
 
     @abc.abstractmethod
-    def out(self, iter: Iterator, override: bool = False) -> None:
+    def out(self, iter: Iterator[str], override: bool = False) -> None:
         pass
 
     @abc.abstractmethod

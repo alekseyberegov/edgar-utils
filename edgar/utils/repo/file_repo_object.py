@@ -1,6 +1,6 @@
 from edgar.utils.repo.repo_fs import RepoObject, RepoDir
 from pathlib import Path
-from typing import Dict, Generator, Iterator, List
+from typing import Iterator, List
 import os
 
 
@@ -10,7 +10,7 @@ class FileRepoObject(RepoObject):
         self.__parent: RepoDir = parent
         parent[obj_name] = self
 
-    def inp(self, bufsize: int) -> Generator[str, None, None]:
+    def inp(self, bufsize: int) -> Iterator[str]:
         with self.__path.open(mode = "r", buffering=bufsize) as f:
             while True:
                 chunk = f.read(bufsize)
@@ -18,7 +18,7 @@ class FileRepoObject(RepoObject):
                     break
                 yield chunk
 
-    def out(self, iter: Iterator, override: bool = False) -> None:
+    def out(self, iter: Iterator[str], override: bool = False) -> None:
         file: Path = self.__path if not override else self.__path.with_suffix('.new')
         
         open_flags = (os.O_CREAT | os.O_EXCL | os.O_RDWR)
