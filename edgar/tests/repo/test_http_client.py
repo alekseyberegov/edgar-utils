@@ -24,13 +24,21 @@ def mocked_requests_get(*args, **kwargs):
 
 class TestHttpClient(unittest.TestCase):
     @mock.patch('requests.get', side_effect=mocked_requests_get)
-    def test_inp_dir_success(self, mock_get):
+    def test_inp_basedir_success(self, mock_get):
         http_client: HttpClient = HttpClient('http://test.com/a/')
         status_code = http_client.get('b/c')
         assert status_code == 200
         content = next(http_client.inp())
         assert content == 'abc'
         
+    @mock.patch('requests.get', side_effect=mocked_requests_get)
+    def test_inp_url_success(self, mock_get):
+        http_client: HttpClient = HttpClient()
+        status_code = http_client.get('http://test.com/a/b/c')
+        assert status_code == 200
+        content = next(http_client.inp())
+        assert content == 'abc'
+
     @mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_inp_file_success(self, mock_get):
         http_client: HttpClient = HttpClient('http://test.com/a/')

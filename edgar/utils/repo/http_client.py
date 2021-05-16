@@ -12,7 +12,7 @@ def static_init(cls):
 class HttpClient(object):
     http_headers: Dict[str,str] = {}
 
-    def __init__(self, base_url: str) -> None:
+    def __init__(self, base_url: str = "") -> None:
         self.base_url = base_url
         self.response = None
         super().__init__()
@@ -28,8 +28,8 @@ class HttpClient(object):
                     a = prop.split('=')
                     headers[a[0].strip()] = '='.join(a[1:]).strip().strip('"') 
 
-    def get(self, path: str) -> int:
-        url = urljoin(self.base_url, path)
+    def get(self, loc: str) -> int:
+        url = urljoin(self.base_url, loc)
         self.response = requests.get(url, headers=HttpClient.http_headers, stream=True)
         return self.response.status_code
 
