@@ -6,12 +6,11 @@ from typing import List, Iterator
 class HttpRepoObject(RepoObject):
 
     def __init__(self, parent: RepoDir, obj_name: str) -> None:
-        self.__url = urljoin(parent.path, obj_name)
+        self.__url = urljoin(parent.as_uri(), obj_name)
         self.__parent: RepoDir = parent
         parent[obj_name] = self
 
-    @property
-    def url(self):
+    def as_url(self) -> str:
         return self.__url
 
     @property

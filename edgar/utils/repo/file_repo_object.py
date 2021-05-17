@@ -1,14 +1,18 @@
 from edgar.utils.repo.repo_fs import RepoObject, RepoDir
 from pathlib import Path
+from urllib.parse import urlparse
 from typing import Iterator, List
 import os
 
 
 class FileRepoObject(RepoObject):
     def __init__(self, parent: RepoDir, obj_name: str) -> None:
-        self.__path: Path = parent.path / obj_name
-        self.__parent: RepoDir = parent
+        self.__path   : Path = Path(urlparse(parent.as_uri()).path) / obj_name
+        self.__parent : RepoDir = parent
         parent[obj_name] = self
+
+    def as_uri(self) -> str:
+        return self.__path.as_uri()
 
     def inp(self, bufsize: int) -> Iterator[str]:
         with self.__path.open(mode = "r", buffering=bufsize) as f:

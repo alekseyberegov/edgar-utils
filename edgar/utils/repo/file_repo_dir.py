@@ -15,8 +15,8 @@ class FileRepoDir(RepoDir):
         the parent directory
     """
     def __init__(self, path: Path, parent: RepoDir = None) -> None:
-        self.__path : Path = path.resolve()
-        self.__parent : RepoDir = parent
+        self.__path     : Path = path.resolve()
+        self.__parent   : RepoDir = parent
         self.__children : Dict[str,RepoEntity] = {}
 
         if parent is not None:
@@ -27,10 +27,13 @@ class FileRepoDir(RepoDir):
         if not self.__path.exists():
             self.__path.mkdir()
 
+    def as_uri(self) -> str:
+        return self.__path.as_uri()
+
     @property
     def path(self) -> Path:
         return self.__path
-    
+
     def refresh(self) -> None:
         if self.__path.exists():
             for e in self.__path.iterdir():

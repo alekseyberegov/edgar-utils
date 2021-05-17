@@ -33,6 +33,10 @@ class RepoEntity(metaclass=abc.ABCMeta):
     def exists(self) -> bool:
         pass
 
+    @abc.abstractmethod
+    def as_uri(self) -> str:
+        pass
+
 class RepoObject(RepoEntity, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def inp(self, bufsize: int) -> Iterator[str]:
