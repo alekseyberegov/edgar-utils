@@ -13,8 +13,8 @@ class HttpClient(object):
     http_headers: Dict[str,str] = {}
 
     def __init__(self, base_url: str = "") -> None:
-        self.base_url = base_url
-        self.response = None
+        self.__base_url = base_url
+        self.__response = None
         super().__init__()
 
     @classmethod
@@ -29,15 +29,22 @@ class HttpClient(object):
                     headers[a[0].strip()] = '='.join(a[1:]).strip().strip('"') 
 
     def get(self, loc: str) -> int:
-        url = urljoin(self.base_url, loc)
-        self.response = requests.get(url, headers=HttpClient.http_headers, stream=True)
-        return self.response.status_code
+        url = urljoin(self.__base_url, loc)
+        self.__response = requests.get(url, headers=HttpClient.http_headers, stream=True)
+        return self.__response.status_code
+
+    def head(self, loc: str) -> int:
+        url = urljoin(self.__base_url, loc)
+        self.__response = requests.head(url, headers=HttpClient.http_headers)
+        return self.__response.status_code
 
     def inp(self, bufsize: int = 2048) -> Iterator:
-        for chunk in self.response.iter_content(bufsize):
+        for chunk in self.__response.iter_content(bufsize):
             yield chunk
 
+        self.close()
+
     def close(self) -> None:
-        if self.response is not None:
-            self.response.close()
-            self.response = None
+        if self.__response is not None:
+            self.__response.close()
+            self.__response = None

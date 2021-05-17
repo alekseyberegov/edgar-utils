@@ -1,4 +1,4 @@
-from edgar.utils.repo.repo_fs import RepoDir, RepoObject,RepoEntity
+from edgar.utils.repo.repo_fs import RepoDir, RepoObject, RepoEntity, RepoDirVisitor
 from edgar.utils.repo.file_repo_object import FileRepoObject
 from pathlib import Path
 from typing import Dict, Tuple, List
@@ -9,61 +9,65 @@ class FileRepoDir(RepoDir):
 
     Parameters
     ----------
-    path : `Path`
+    path : Path
         the physical path to the directory
-
-    parent : `FileRepoDir`
+    parent : RepoDir
         the parent directory
     """
-    def __init__(self, path: Path, parent: 'FileRepoDir' = None) -> None:
-        self.path : Path = path.resolve()
-        self.parent : 'FileRepoDir' = parent
-        if parent is not None:
-            parent[self.path.name] = self
+    def __init__(self, path: Path, parent: RepoDir = None) -> None:
+        self.__path : Path = path.resolve()
+        self.__parent : RepoDir = parent
+        self.__children : Dict[str,RepoEntity] = {}
 
-        self.children : Dict[str,RepoEntity] = {}
+        if parent is not None:
+            parent[self.__path.name] = self
+
         self.refresh()
 
-        if not self.path.exists():
-            self.path.mkdir()
+        if not self.__path.exists():
+            self.__path.mkdir()
+
+    @property
+    def path(self) -> Path:
+        return self.__path
     
     def refresh(self) -> None:
-        if self.path.exists():
-            for e in self.path.iterdir():
+        if self.__path.exists():
+            for e in self.__path.iterdir():
                 if e.name not in self:
                     self[e.name] = FileRepoDir(e, self) if e.is_dir() else FileRepoObject(self, e.name)
                 else:
                     if e.is_dir(): self[e.name].refresh()
 
     def __iter__(self):
-        return iter(self.children.items())
+        return iter(self.__children.items())
 
     def __len__(self):
-        return len(self.children)
+        return len(self.__children)
 
     def __contains__(self, key):
-        return key in self.children
+        return key in self.__children
 
     def __getitem__(self, key):
-        val = self.children[key]
+        val = self.__children[key]
         return val
 
     def __setitem__(self, key, val):
-        self.children[key] = val
+        self.__children[key] = val
 
     def exists(self) -> bool:
-        return self.path.exists()
+        return self.__path.exists()
 
     def new_object(self, name: str) -> RepoObject:
         return FileRepoObject(self, name)
 
     def new_dir(self, name: str) -> RepoDir:
-        return FileRepoDir(self.path / name, self)
+        return FileRepoDir(self.__path / name, self)
 
     def tree(self):
-        print(f'+ {self.path}')
-        for e in sorted(self.path.rglob('*')):
-            depth = len(e.relative_to(self.path).parts)
+        print(f'+ {self.__path}')
+        for e in sorted(self.__path.rglob('*')):
+            depth = len(e.relative_to(self.__path).parts)
             spacer = '    ' * depth
             print(f'{spacer}+ {e.name}')
 
@@ -71,15 +75,15 @@ class FileRepoDir(RepoDir):
         counter = 0
         while True:
             counter += 1
-            e = self.path / name_pattern.format(counter)
+            e = self.__path / name_pattern.format(counter)
             if not e.exists():
                 return e
 
     def lastmodified(self) -> Tuple[datetime.datetime, Path]:
-        (timestamp, file) =  max((f.stat().st_mtime, f) for f in self.path.iterdir())
+        (timestamp, file) =  max((f.stat().st_mtime, f) for f in self.__path.iterdir())
         return (datetime.datetime.fromtimestamp(timestamp), file)
 
-    def sorted_entities(self) -> List[str]:
+    def sort(self) -> List[str]:
         return sorted([name for (name, _) in self], reverse = True) if len(self) > 0 else []
 
     def get(self, path_list: List[str]) -> RepoEntity:
@@ -91,8 +95,8 @@ class FileRepoDir(RepoDir):
                 return None
         return o
 
-    def visit(self, visitor: 'FileRepoDirVisitor') -> None:
-        for name in self.sorted_entities():
+    def visit(self, visitor: RepoDirVisitor) -> None:
+        for name in self.sort():
             o: RepoEntity = self[name]
             if isinstance(o, RepoObject):
                 if not visitor.visit(o):
@@ -103,16 +107,9 @@ class FileRepoDir(RepoDir):
         return True
 
     def subpath(self, levels: int) -> List[str]:
-        p: List[str] = []
-        o: RepoEntity = self
-        for _ in range(levels):
-            p.insert(0, o.path.name)
-            o = o.parent
-        return p
-
-
-class FileRepoDirVisitor(metaclass=abc.ABCMeta):
-    @abc.abstractmethod
-    def visit(object: RepoObject) -> bool:
-        pass
-
+        if levels <= 0:
+            return []
+        else:
+            p = self.__parent.subpath(levels - 1)
+            p.append(self.__path.name)
+            return p

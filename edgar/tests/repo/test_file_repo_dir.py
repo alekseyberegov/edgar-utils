@@ -66,9 +66,9 @@ class TestFileRepoDir(object):
         assert path.name == str(max(y for y in YEAR_LIST))
         assert now > timestamp and timestamp > now - timedelta(seconds = 10)
 
-    def test_sorted_entities(self, dir_prepped: tempfile.TemporaryDirectory) -> None:
+    def test_sort(self, dir_prepped: tempfile.TemporaryDirectory) -> None:
         dir: FileRepoDir = FileRepoDir(Path(dir_prepped.name))
-        objects: List = dir.sorted_entities()
+        objects: List[str] = dir.sort()
         expected: Iterator = iter(sorted(YEAR_LIST, reverse = True))
         for actual in objects:
             assert actual == str(next(expected))

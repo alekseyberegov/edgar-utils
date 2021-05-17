@@ -46,6 +46,10 @@ class RepoObject(RepoEntity, metaclass=abc.ABCMeta):
     def subpath(self, levels: int) -> List[str]:
         pass
 
+    @abc.abstractmethod
+    def exists(self) -> bool:
+        pass
+
 class RepoDir(RepoEntity, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def new_object(self, name: str) -> RepoObject:
@@ -74,4 +78,9 @@ class RepoFS(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def refresh(self) -> None:
+        pass
+
+class RepoDirVisitor(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def visit(self, object: RepoObject) -> bool:
         pass

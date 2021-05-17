@@ -17,7 +17,7 @@ class TestFileRepoObject(object):
         assert obj.path.name == name
         assert obj.parent == dir
         assert not obj.exists()
-        assert name in dir.children
+        assert name in dir
         assert len(dir) == len(YEAR_LIST) + 1
 
     def test_out(self, dir_empty: tempfile.TemporaryDirectory, fake: Faker) -> None:
@@ -48,7 +48,7 @@ class TestFileRepoObject(object):
 
         with pytest.raises(FileExistsError): 
             obj.out(iter(input))
-            raise False
+            assert False
     
     def test_out_overwrite(self, dir_empty: tempfile.TemporaryDirectory, fake: Faker) -> None:
         name: str = fake.file_name(extension = 'csv')

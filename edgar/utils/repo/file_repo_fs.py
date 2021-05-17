@@ -1,5 +1,5 @@
-from edgar.utils.repo.repo_fs import RepoObject, RepoFS, RepoEntity, RepoFormat
-from edgar.utils.repo.file_repo_dir import FileRepoDir, FileRepoDirVisitor
+from edgar.utils.repo.repo_fs import RepoObject, RepoFS, RepoEntity, RepoFormat, RepoDirVisitor
+from edgar.utils.repo.file_repo_dir import FileRepoDir
 from edgar.utils.repo.file_object_locator import FileObjectLocator
 from edgar.utils.date.date_utils import Date, DatePeriodType
 from edgar.utils.date.holidays import us_holidays
@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Dict, List
 
 
-class FileRepoFS(RepoFS, FileRepoDirVisitor):
+class FileRepoFS(RepoFS, RepoDirVisitor):
     def __init__(self, root: Path, format: RepoFormat) -> None:
         self.__root     : FileRepoDir = FileRepoDir(root)
         self.__format   : RepoFormat = format
