@@ -99,5 +99,5 @@ class TestFileRepoObject(object):
         obj: FileRepoObject = FileRepoObject(dir, fake.file_name(extension = 'xml')) 
 
         with pytest.raises(FileNotFoundError):
-            for chunk in obj.inp(512):
+            for _ in obj.inp(512):
                 assert False
