@@ -2,25 +2,15 @@ import unittest
 from unittest import mock
 from typing import Dict
 from edgar.utils.repo.http_client import HttpClient
-
-class MockResponse:
-    def __init__(self, content, status_code):
-        self.content = content
-        self.status_code = status_code
-
-    def iter_content(self, chuck_size):
-        return iter([self.content])
+from edgar.tests.mock import MockResponse
 
 route_map: Dict[str, MockResponse] = {
-    'http://test.com/a/b/c'         : MockResponse('abc', 200),
-    'http://test.com/a/b/c/file.idx': MockResponse('123', 200)
+    'http://test.com/a/b/c'         : MockResponse(['abc'], 200),
+    'http://test.com/a/b/c/file.idx': MockResponse(['123'], 200)
 }
 
 def mocked_requests_get(*args, **kwargs):
-    print(args[0])
-    if args[0] in route_map:
-        return route_map[args[0]]
-    return MockResponse(None, 404)
+    return route_map[args[0]] if args[0] in route_map else MockResponse(None, 404)
 
 class TestHttpClient(unittest.TestCase):
     @mock.patch('requests.get', side_effect=mocked_requests_get)

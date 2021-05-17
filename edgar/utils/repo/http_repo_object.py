@@ -10,7 +10,7 @@ class HttpRepoObject(RepoObject):
         self.__parent: RepoDir = parent
         parent[obj_name] = self
 
-    def as_url(self) -> str:
+    def as_uri(self) -> str:
         return self.__url
 
     @property
@@ -24,13 +24,11 @@ class HttpRepoObject(RepoObject):
         client: HttpClient = HttpClient()
         return client.head(self.__url) == 200
 
-    def inp(self, bufsize: int) -> Iterator[str]:
+    def inp(self, bufsize: int = 2048) -> Iterator[str]:
         client: HttpClient = HttpClient()
-        if client.get(self.__url) == 200:
-            return client.inp(bufsize=bufsize)
-        else:
-            client.close()
-            yield from ()
+        status_code: int = client.get(self.__url)
+        yield from client.inp(bufsize=bufsize) if status_code == 200 else ()
+        client.close()
 
     def out(self, iter: Iterator[str], override: bool = False) -> None:
         pass

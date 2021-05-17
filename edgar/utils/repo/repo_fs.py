@@ -50,10 +50,6 @@ class RepoObject(RepoEntity, metaclass=abc.ABCMeta):
     def subpath(self, levels: int) -> List[str]:
         pass
 
-    @abc.abstractmethod
-    def exists(self) -> bool:
-        pass
-
 class RepoDir(RepoEntity, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def new_object(self, name: str) -> RepoObject:
