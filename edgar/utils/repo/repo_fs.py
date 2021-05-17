@@ -69,7 +69,7 @@ class RepoDir(RepoEntity, metaclass=abc.ABCMeta):
 
 class RepoFS(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def check_updates(self, from_date: Date, to_date: Date) -> List[str]:
+    def find_missing(self, from_date: Date, to_date: Date) -> List[str]:
         pass
 
     @abc.abstractmethod

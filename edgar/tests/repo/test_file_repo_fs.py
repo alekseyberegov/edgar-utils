@@ -21,14 +21,6 @@ class TestFileRepoFS(object):
         ['{t}', '{y}', 'QTR{q}']
     )
 
-    def test_list_years(self, test_fs: tempfile.TemporaryDirectory, fake: Faker) -> None:
-        fs: FileRepoFS = FileRepoFS(Path(test_fs.name), self.REPO_FORMAT)
-        for j in [DatePeriodType.DAY, DatePeriodType.QUARTER]:
-            years: List[int] = fs.list_years(j)
-            assert max(years) == max(YEAR_LIST)
-            for i in YEAR_LIST:
-                assert i in years
-
     @pytest.mark.parametrize("obj_path", [
         ('Q/2020/QTR1/file-0.txt'),
         ('Q/2020/QTR3/file-1.txt'),
@@ -63,10 +55,10 @@ class TestFileRepoFS(object):
         obj: FileRepoObject = fs.find(date_period, the_date)
         assert obj.subpath(4) == path
 
-    def test_check_updates(self, edgar_fs: tempfile.TemporaryDirectory):
+    def test_find_missing(self, edgar_fs: tempfile.TemporaryDirectory):
         root: Path = Path(edgar_fs.name)
         fs: FileRepoFS = FileRepoFS(root, self.REPO_FORMAT)
-        updates: List[str] = fs.check_updates(Date('2017-09-10'), Date('2019-05-25'))
+        missing: List[str] = fs.find_missing(Date('2017-09-10'), Date('2019-05-25'))
             
         holidays_sample: List[Date] = [
             Date('2018-01-01'), Date('2018-01-15'), Date('2018-02-19'),
@@ -78,7 +70,7 @@ class TestFileRepoFS(object):
         
         q: int = 0
         d: int = 0
-        for i in updates:
+        for i in missing:
             loc: FileObjectLocator = FileObjectLocator(i, FileObjectLocator.DEFAULT_PATH_SPEC)
             if loc[0] == str(DatePeriodType.QUARTER):
                 assert loc[-1] == 'master.idx'

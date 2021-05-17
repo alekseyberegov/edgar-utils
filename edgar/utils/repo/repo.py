@@ -10,5 +10,5 @@ class Repo(object):
         return self._repo_fs
 
     @property.setter
-    def fs(self, new_fs: RepoFS):
+    def fs(self, new_fs: RepoFS): # pylint: disable-msg=E0102
         self._repo_fs = new_fs
