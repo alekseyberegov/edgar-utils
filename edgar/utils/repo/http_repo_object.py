@@ -1,14 +1,14 @@
 from edgar.utils.repo.repo_fs import RepoObject, RepoDir
 from edgar.utils.repo.http_client import HttpClient
-from urllib.parse import urljoin
+from edgar.utils.repo.http_tools import make_url
 from typing import List, Iterator
 
 class HttpRepoObject(RepoObject):
 
     def __init__(self, parent: RepoDir, obj_name: str) -> None:
-        self.__url = urljoin(parent.as_uri(), obj_name)
+        self.__url = make_url(parent.as_uri(), obj_name)
         self.__parent: RepoDir = parent
-        parent[obj_name] = self
+        self.__parent[obj_name] = self
 
     def as_uri(self) -> str:
         return self.__url
