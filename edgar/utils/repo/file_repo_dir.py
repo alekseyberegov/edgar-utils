@@ -15,9 +15,9 @@ class FileRepoDir(RepoDir):
         the parent directory
     """
     def __init__(self, path: Path, parent: RepoDir = None) -> None:
-        self.__path     : Path = path.resolve()
-        self.__parent   : RepoDir = parent
-        self.__children : Dict[str,RepoEntity] = {}
+        self.__path: Path = path.resolve()
+        self.__parent: RepoDir = parent
+        self.__children: Dict[str,RepoEntity] = {}
 
         if parent is not None:
             parent[self.__path.name] = self
