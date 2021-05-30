@@ -1,6 +1,6 @@
 import pytest
 import tempfile
-import time
+import unittest
 
 from edgar.utils.repo.repo_fs import RepoFormat, RepoObject
 from edgar.utils.date.date_utils import DatePeriodType, Date
@@ -15,7 +15,7 @@ from edgar.utils.repo.file_repo_object import FileRepoObject
 from edgar.tests.globals import YEAR_LIST
 
 
-class TestFileRepoFS(object):    
+class TestFileRepoFS:
     REPO_FORMAT: RepoFormat = RepoFormat(
         {DatePeriodType.DAY: 'master{y}{m:02}{d:02}.idx', DatePeriodType.QUARTER : 'master.idx'},
         ['{t}', '{y}', 'QTR{q}']

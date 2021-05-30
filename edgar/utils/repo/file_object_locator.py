@@ -1,5 +1,5 @@
 from edgar.utils.repo.file_repo_object import FileRepoObject
-from edgar.utils.repo.repo_fs import RepoFormatter
+from edgar.utils.repo.repo_fs import RepoFormatter, RepoFormat
 from edgar.utils.date.date_utils import Date, DatePeriodType
 from datetime import date
 from parse import parse
@@ -51,7 +51,7 @@ class FileObjectLocator(object):
         return FileObjectLocator(obj.subpath(len(spec) + 1), spec)
 
     @staticmethod
-    def from_date(date_period: DatePeriodType, the_date: Date, 
+    def from_date(period_type: DatePeriodType, the_date: Date, 
             name_spec: str, path_spec: List[str], **kwargs:object) -> 'FileObjectLocator':
         """
         Get an object locator for the given date using the provided name specification
@@ -59,7 +59,7 @@ class FileObjectLocator(object):
         Parameters
         ----------
         date_period: `DatePeriodType`
-            the date period: day or quarter
+            the date period type: day or quarter
         the_date: `Date`
             the date
         name_spec: `str`
@@ -74,8 +74,8 @@ class FileObjectLocator(object):
         FileObjectLocator
             the file object locator
         """
-        return FileObjectLocator([*[the_date.format(spec, date_period, **kwargs) for spec in path_spec], 
-            the_date.format(name_spec, date_period, **kwargs)], path_spec)
+        formatter: RepoFormatter = RepoFormatter(RepoFormat({period_type: name_spec}, path_spec))
+        return FileObjectLocator(formatter.format(period_type, the_date, **kwargs), path_spec)
 
     def __len__(self) -> int:
         """

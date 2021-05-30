@@ -36,16 +36,16 @@ class RepoFormatter:
     def __setitem__(self, key, val):
         self.__macros[key] = val
 
-    def format(self, period_type: DatePeriodType, date: Date, **kwargs) -> List[str]:
-        name_spec = self.__format.name_spec
+    def format(self, period_type: DatePeriodType, the_date: Date, **kwargs) -> List[str]:
+        name_spec = self.__format.name_spec[period_type]
         path_spec = self.__format.path_spec
 
         eval_macros = dict(kwargs)
         for name, func in self.__macros.items():
-            eval_macros[name] = func(period_type, date)
+            eval_macros[name] = func(period_type, the_date)
 
-        return [*[date.format(spec, period_type, **eval_macros) for spec in path_spec], 
-            date.format(name_spec, period_type, **eval_macros)]
+        return [*[the_date.format(s, period_type, **eval_macros) for s in path_spec], 
+            the_date.format(name_spec, period_type, **eval_macros)]
 
 
 class RepoEntity(metaclass=abc.ABCMeta):

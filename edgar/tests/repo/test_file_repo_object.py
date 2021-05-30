@@ -1,4 +1,4 @@
-import pytest, tempfile
+import pytest, tempfile, unittest
 
 from pathlib import Path
 from faker import Faker
@@ -8,7 +8,7 @@ from edgar.utils.repo.file_repo_dir import FileRepoDir
 from edgar.utils.repo.file_repo_object import FileRepoObject
 from edgar.tests.globals import YEAR_LIST
 
-class TestFileRepoObject(object):
+class TestFileRepoObject:
     def test_init(self, dir_prepped: tempfile.TemporaryDirectory, fake: Faker) -> None:
         name: str = fake.file_name()
         dir: FileRepoDir = FileRepoDir(Path(dir_prepped.name))

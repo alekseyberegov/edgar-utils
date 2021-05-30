@@ -1,4 +1,4 @@
-import pytest, tempfile
+import pytest, tempfile, unittest
 from typing import List
 from pathlib import Path
 
@@ -6,7 +6,7 @@ from edgar.utils.repo.file_object_locator import FileObjectLocator
 from edgar.utils.repo.file_repo_dir import FileRepoDir
 from edgar.utils.date.date_utils import Date, DatePeriodType
 
-class TestFileObjectLocator(object):
+class TestFileObjectLocator:
     @pytest.mark.parametrize("path, date_period, quarter, year, date_str", [
         ('Q/1972/QTR4/master19721213.idx', 'Q', 4, 1972, '1972-12-13'),
         ('Q/2020/QTR1/master20200105.idx', 'Q', 1, 2020, '2020-01-05'),

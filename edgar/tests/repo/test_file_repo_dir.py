@@ -1,4 +1,4 @@
-import pytest, tempfile
+import pytest, tempfile, unittest
 
 from faker import Faker
 from unittest.mock import MagicMock
@@ -10,7 +10,7 @@ from edgar.utils.repo.file_repo_dir import FileRepoDir
 from edgar.tests.globals import YEAR_LIST, FILE_PER_DIR
 
 
-class TestFileRepoDir(object):
+class TestFileRepoDir:
     def test_init_dir_empty(self, dir_empty: tempfile.TemporaryDirectory) -> None:
         dir: FileRepoDir = FileRepoDir(Path(dir_empty.name))
         assert dir.exists()
