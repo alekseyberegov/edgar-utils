@@ -28,6 +28,26 @@ class RepoFormat:
     path_spec: List[str]
 
 
+class RepoFormatter:
+    def __init__(self, format: RepoFormat) -> None:
+        self.__format = format
+        self.__macros = {}
+
+    def __setitem__(self, key, val):
+        self.__macros[key] = val
+
+    def format(self, period_type: DatePeriodType, date: Date, **kwargs) -> List[str]:
+        name_spec = self.__format.name_spec
+        path_spec = self.__format.path_spec
+
+        eval_macros = dict(kwargs)
+        for name, func in self.__macros.items():
+            eval_macros[name] = func(period_type, date)
+
+        return [*[date.format(spec, period_type, **eval_macros) for spec in path_spec], 
+            date.format(name_spec, period_type, **eval_macros)]
+
+
 class RepoEntity(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def exists(self) -> bool:

@@ -1,4 +1,5 @@
 from edgar.utils.repo.file_repo_object import FileRepoObject
+from edgar.utils.repo.repo_fs import RepoFormatter
 from edgar.utils.date.date_utils import Date, DatePeriodType
 from datetime import date
 from parse import parse
@@ -28,8 +29,8 @@ class FileObjectLocator(object):
         spec: `List[str]`
             the path specification
         """
-        self.path: List[str] = path if isinstance(path, List) else path.split(os.path.sep)
-        self.spec: List[str] = spec
+        self.__path: List[str] = path if isinstance(path, List) else path.split(os.path.sep)
+        self.__spec: List[str] = spec
 
     @staticmethod
     def locate(obj: FileRepoObject, spec: List[str]) -> 'FileObjectLocator':
@@ -85,7 +86,7 @@ class FileObjectLocator(object):
             int
                 the length of the path or object uri
         """
-        return len(self.path)
+        return len(self.__path)
 
     def __str__(self) -> str:
         """
@@ -96,7 +97,7 @@ class FileObjectLocator(object):
             str
                 the path to an object referenced by the locator
         """
-        return os.path.sep.join(self.path)
+        return os.path.sep.join(self.__path)
 
     def __getitem__(self, key):
         """
@@ -112,10 +113,10 @@ class FileObjectLocator(object):
                 the key's element of the locator
         """
         if isinstance(key, slice):
-            indices = range(*key.indices(len(self.path)))
-            return [self.path[i] for i in indices]
+            indices = range(*key.indices(len(self.__path)))
+            return [self.__path[i] for i in indices]
         else:
-            return self.path[int(key)]
+            return self.__path[int(key)]
 
     def __iter__(self) -> Iterator:
         """
@@ -126,7 +127,7 @@ class FileObjectLocator(object):
             Iterator
                 the iterator
         """
-        return iter(self.path)
+        return iter(self.__path)
 
     def parent(self) -> str:
         """
@@ -186,7 +187,7 @@ class FileObjectLocator(object):
             the date
         """
 
-        params = parse(objectname_spec, self.path[-1])
+        params = parse(objectname_spec, self.__path[-1])
         return Date(date(int(params['y']), int(params['m']),int(params['d'])))
 
     def get_param(self, param_name: str) -> str:
@@ -206,7 +207,7 @@ class FileObjectLocator(object):
         i: int = 0
         macro = '{' + param_name + '}'
 
-        for s in self.spec:
+        for s in self.__spec:
             if macro in s:
                 return parse(s, self[i])[param_name]
             i += 1
