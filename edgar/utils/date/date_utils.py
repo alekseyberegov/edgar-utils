@@ -268,7 +268,7 @@ class Date(object):
         else:
             yield DatePeriod(DatePeriodType.QUARTER if from_date == qbeg else DatePeriodType.DAY, from_date, qend)
 
-            for q in range(2, qnum + 1):
+            for _ in range(2, qnum + 1):
                 (qbeg, qend) = qend.add_days(1).quarter_dates()
                 yield DatePeriod(DatePeriodType.QUARTER, qbeg, qend)
 
