@@ -13,15 +13,15 @@ class HttpRepoFS(RepoFS):
     def find_missing(self, from_date: Date, to_date: Date) -> List[str]:
         return []
 
-    def find(self, date_period: DatePeriodType, the_date: Date) -> RepoObject:
-        path: List[str] = self.__formatter.format(date_period, the_date)
+    def find(self, period_type: DatePeriodType, the_date: Date) -> RepoObject:
+        path: List[str] = self.__formatter.format(period_type, the_date)
         dir: HttpRepoDir = self.__root
         for i in path[:-1]:
             dir = HttpRepoDir(make_url(dir.as_uri(), i), dir)
         return HttpRepoObject(dir, path[-1])
 
-    def create(self, date_period: DatePeriodType, the_date: Date) -> RepoObject:
-        return self.find(date_period, the_date)
+    def create(self, period_type: DatePeriodType, the_date: Date) -> RepoObject:
+        return self.find(period_type, the_date)
 
     def refresh(self) -> None:
         pass

@@ -89,11 +89,11 @@ class RepoFS(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def find(self, date_period: DatePeriodType, the_date: Date) -> RepoObject:        
+    def find(self, period_type: DatePeriodType, the_date: Date) -> RepoObject:        
         pass
 
     @abc.abstractmethod
-    def create(self, date_period: DatePeriodType, the_date: Date) -> RepoObject:
+    def create(self, period_type: DatePeriodType, the_date: Date) -> RepoObject:
         pass
 
     @abc.abstractmethod

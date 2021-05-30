@@ -59,9 +59,9 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
 
         return u
 
-    def __ref(self, date_period: DatePeriodType, the_date: Date) -> ObjLoc:
-        return ObjLoc.from_date(date_period, the_date, 
-            self.__format.name_spec[date_period],  
+    def __ref(self, period_type: DatePeriodType, the_date: Date) -> ObjLoc:
+        return ObjLoc.from_date(period_type, the_date, 
+            self.__format.name_spec[period_type],  
             self.__format.path_spec)
 
     def get_object(self, obj_uri: str) -> RepoObject:
@@ -115,13 +115,13 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
         
         return e.new_object(obj_name)
 
-    def find(self, date_period: DatePeriodType, the_date: Date) -> RepoObject:
+    def find(self, period_type: DatePeriodType, the_date: Date) -> RepoObject:
         """
             Finds an object for the given date and period type
 
             Parameters
             ----------
-            date_period: DatePeriodType
+            period_type: DatePeriodType
                 the date period type            
             the_date: Date
                 the date
@@ -131,15 +131,15 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             RepoObject
                 the object
         """
-        return self.get_object(str(self.__ref(date_period, the_date)))
+        return self.get_object(str(self.__ref(period_type, the_date)))
 
-    def create(self, date_period: DatePeriodType, the_date: Date) -> RepoObject:
+    def create(self, period_type: DatePeriodType, the_date: Date) -> RepoObject:
         """
             Creates an object for the given date and period type
 
             Parameters
             ----------
-            date_period: DatePeriodType
+            period_type: DatePeriodType
                 the period type
             the_date: Date
                 the date
@@ -149,7 +149,7 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             RepoObject
             
         """
-        p: ObjLoc = self.__ref(date_period, the_date)
+        p: ObjLoc = self.__ref(period_type, the_date)
         return self.new_object(p.parent(), p[-1])
 
     def refresh(self) -> None:

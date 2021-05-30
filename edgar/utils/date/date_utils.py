@@ -85,7 +85,7 @@ class Date(object):
         """
         return Date(the_date)
 
-    def format(self, format_spec: str, date_period: DatePeriodType = None, **kwargs: object) -> str:
+    def format(self, format_spec: str, period_type: DatePeriodType = None, **kwargs: object) -> str:
         """
             Formats the date according to the given specification
 
@@ -118,7 +118,7 @@ class Date(object):
             y = self.__the_date.year,
             m = self.__the_date.month,
             d = self.__the_date.day,
-            t = str(date_period) if date_period is not None else '',
+            t = str(period_type) if period_type is not None else '',
             **kwargs
         )
 
