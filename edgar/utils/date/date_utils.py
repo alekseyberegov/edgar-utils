@@ -98,6 +98,7 @@ class Date(object):
                     - {m} for the month number
                     - {y} for the 4-digit year number
                     - {t} for the date period type
+                    - {i} for the index
 
             date_period: DatePeriodType
                 the date period type

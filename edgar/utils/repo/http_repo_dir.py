@@ -8,7 +8,6 @@ class HttpRepoDir(RepoDir):
     def __init__(self, url: str, parent: RepoDir = None) -> None:
         self.__url: str = norm_dir_url(url)
         self.__parent: RepoDir = parent
-        super().__init__()
 
     def __setitem__(self, key, value):
         pass
