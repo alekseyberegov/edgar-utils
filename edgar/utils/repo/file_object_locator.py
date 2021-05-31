@@ -7,52 +7,49 @@ from typing import Iterator, List, Union
 import os
 
 
-class FileObjectLocator(object):
+class FileObjectPath(object):
     """
     This class represents an utility that helps locating objects 
     in the repository using either a relative path or date
 
-    The default path specification for objects in the repository is as follow
-        ["D" | "Q"] / <YEAR> / "QTR"<QUARTER> 
+    Example:
+        ["D" | "Q"] / <YEAR> / "QTR"<QUARTER> / "master.idx"
     """
 
-    DEFAULT_PATH_SPEC: List[str] = ['{t}', '{y}', 'QTR{q}']
-
-    def __init__(self, path: Union[str, List[str]], spec: List[str]) -> None:
+    def __init__(self, path: Union[str, List[str]], repo_format: RepoFormat) -> None:
         """Locate a file object in a repo FS
 
         Parameters
         -----------
         path: `Union[str,List[str]]`
             the relative path as a string or in a form of a list for individuals path elements
-
-        spec: `List[str]`
-            the path specification
+        repo_format: RepoFormat
+            the repo format
         """
         self.__path: List[str] = path if isinstance(path, List) else path.split(os.path.sep)
-        self.__spec: List[str] = spec
+        self.__format: RepoFormat = repo_format
 
     @staticmethod
-    def locate(obj: FileRepoObject, spec: List[str]) -> 'FileObjectLocator':
+    def from_object(obj: FileRepoObject, repo_format: RepoFormat) -> 'FileObjectPath':
         """Get a locator for the given repo object
 
         Parameters
         ----------
         obj: FileRepoObject
             the repo object for which a locator will be returned
-        spec : List[str]
-            the path specification
-
-        Returns
+        repo_format: RepoFormat
+            the repo format
+        
+        Returns 
         -------
         FileObjectLocator
             the locator for the given repo object
         """
-        return FileObjectLocator(obj.subpath(len(spec) + 1), spec)
+        return FileObjectPath(obj.subpath(len(repo_format.path_spec) + 1), repo_format)
 
     @staticmethod
     def from_date(period_type: DatePeriodType, the_date: Date, 
-            name_spec: str, path_spec: List[str], **kwargs:object) -> 'FileObjectLocator':
+            repo_format: RepoFormat, **kwargs:object) -> 'FileObjectPath':
         """
         Get an object locator for the given date using the provided name specification
 
@@ -62,10 +59,8 @@ class FileObjectLocator(object):
             the date period type: day or quarter
         the_date: `Date`
             the date
-        name_spec: `str`
-            the object name specification
-        path_spec: `List[str]`
-            the object path specification
+        repo_format: RepoFormat
+            the repo format
         **kwargs: object
             extra macros for path and file name templates
 
@@ -74,8 +69,8 @@ class FileObjectLocator(object):
         FileObjectLocator
             the file object locator
         """
-        formatter: RepoFormatter = RepoFormatter(RepoFormat({period_type: name_spec}, path_spec))
-        return FileObjectLocator(formatter.format(period_type, the_date, **kwargs), path_spec)
+        formatter: RepoFormatter = RepoFormatter(repo_format)
+        return FileObjectPath(formatter.format(period_type, the_date, **kwargs), repo_format)
 
     def __len__(self) -> int:
         """
@@ -161,7 +156,7 @@ class FileObjectLocator(object):
         """
         return int(self.get_param('q'))
 
-    def date_period(self) -> DatePeriodType:
+    def date_period_type(self) -> DatePeriodType:
         """
         Returns the date period associated with an object identified by the locator
 
@@ -207,7 +202,7 @@ class FileObjectLocator(object):
         i: int = 0
         macro = '{' + param_name + '}'
 
-        for s in self.__spec:
+        for s in self.__format.path_spec:
             if macro in s:
                 return parse(s, self[i])[param_name]
             i += 1

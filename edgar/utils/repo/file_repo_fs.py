@@ -1,6 +1,6 @@
 from edgar.utils.repo.repo_fs import RepoObject, RepoFS, RepoEntity, RepoFormat, RepoDirVisitor
 from edgar.utils.repo.file_repo_dir import FileRepoDir
-from edgar.utils.repo.file_object_locator import FileObjectLocator as ObjLoc
+from edgar.utils.repo.file_object_locator import FileObjectPath as ObjectPath
 from edgar.utils.date.date_utils import Date, DatePeriodType
 from edgar.utils.date.holidays import us_holidays
 from pathlib import Path
@@ -45,11 +45,11 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
                 in_y, in_q = y, 0
 
             if not (d.is_weekend() or d in h):
-                o: str = str(self.__ref(DatePeriodType.DAY, d))
+                o: str = str(self.__object_path(DatePeriodType.DAY, d))
                 if o not in self.__index:
                     if q != in_q:
                         # Add a quartely file to the update list only if it has not been added before
-                        u.append(str(self.__ref(DatePeriodType.QUARTER, d)))
+                        u.append(str(self.__object_path(DatePeriodType.QUARTER, d)))
                         in_q = q
 
                     # Add a daily file to the update list
@@ -59,10 +59,8 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
 
         return u
 
-    def __ref(self, period_type: DatePeriodType, the_date: Date) -> ObjLoc:
-        return ObjLoc.from_date(period_type, the_date, 
-            self.__format.name_spec[period_type],  
-            self.__format.path_spec)
+    def __object_path(self, period_type: DatePeriodType, the_date: Date) -> ObjectPath:
+        return ObjectPath.from_date(period_type, the_date, self.__format)
 
     def get_object(self, obj_uri: str) -> RepoObject:
         """
@@ -78,9 +76,9 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             RepoObject | None
                 the repo objet at the given path. If no object is found then None is returned
         """
-        loc: ObjLoc = ObjLoc(obj_uri, self.__format.path_spec)
+        p: ObjectPath = ObjectPath(obj_uri, self.__format)
         e: RepoEntity = self.__root
-        for i in loc:
+        for i in p:
             if i in e:
                 e = e[i]
             else:
@@ -103,11 +101,11 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             RepoObject
                 the newly created repo object
         """
-        loc: ObjLoc = ObjLoc(obj_path, self.__format.path_spec)
+        p: ObjectPath = ObjectPath(obj_path, self.__format)
         e: RepoEntity = self.__root
 
-        for i in range(len(loc)):
-            name: str = loc[i]
+        for i in range(len(p)):
+            name: str = p[i]
             if name not in e:
                 e = e.new_dir(name)
             else:
@@ -131,7 +129,7 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             RepoObject
                 the object
         """
-        return self.get_object(str(self.__ref(period_type, the_date)))
+        return self.get_object(str(self.__object_path(period_type, the_date)))
 
     def create(self, period_type: DatePeriodType, the_date: Date) -> RepoObject:
         """
@@ -149,7 +147,7 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             RepoObject
             
         """
-        p: ObjLoc = self.__ref(period_type, the_date)
+        p: ObjectPath = self.__object_path(period_type, the_date)
         return self.new_object(p.parent(), p[-1])
 
     def refresh(self) -> None:
@@ -161,6 +159,6 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
         self.__root.visit(self)
 
     def visit(self, obj: RepoObject) -> bool:
-        loc: ObjLoc = ObjLoc.locate(obj, self.__format.path_spec)
-        self.__index[str(loc)] = obj
+        p: ObjectPath = ObjectPath.from_object(obj, self.__format)
+        self.__index[str(p)] = obj
         return True

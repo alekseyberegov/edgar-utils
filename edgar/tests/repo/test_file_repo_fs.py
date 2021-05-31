@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 from faker import Faker
 from edgar.utils.repo.file_repo_fs import FileRepoFS
-from edgar.utils.repo.file_object_locator import FileObjectLocator
+from edgar.utils.repo.file_object_locator import FileObjectPath
 from edgar.utils.repo.file_repo_object import FileRepoObject
 from edgar.tests.globals import YEAR_LIST
 
@@ -71,7 +71,7 @@ class TestFileRepoFS:
         q: int = 0
         d: int = 0
         for i in missing:
-            loc: FileObjectLocator = FileObjectLocator(i, FileObjectLocator.DEFAULT_PATH_SPEC)
+            loc: FileObjectPath = FileObjectPath(i, self.REPO_FORMAT)
             if loc[0] == str(DatePeriodType.QUARTER):
                 assert loc[-1] == 'master.idx'
                 q += 1
