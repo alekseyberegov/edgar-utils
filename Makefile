@@ -1,5 +1,7 @@
 .DEFAULT_GOAL := help
 
+DOC_INDEX := file://$(abspath $(dir $(lastword $(MAKEFILE_LIST)))/docs/_build/html/index.html)
+
 # From https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 .PHONY: help
 help:
@@ -29,5 +31,8 @@ dev.setup:  ## Install dependencies for the development
 dev.test:  ## Run tests
 	pytest --cov=edgar
 
-dev.doc:  ## Generate documentation
+doc.html:  ## Generate HTML documentation
 	cd docs && $(MAKE) html
+
+doc.open:  ## Open the documentation in the default browser
+	python -m webbrowser $(DOC_INDEX)
