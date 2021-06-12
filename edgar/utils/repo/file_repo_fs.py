@@ -4,7 +4,7 @@ from edgar.utils.repo.file_object_locator import FileObjectPath
 from edgar.utils.date.date_utils import Date, DatePeriodType
 from edgar.utils.date.holidays import us_holidays
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Iterator
 
 
 class FileRepoFS(RepoFS, RepoDirVisitor):
@@ -14,6 +14,12 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
         self.__index    : Dict[str, RepoObject] = {}
 
     def find_missing(self, from_date: Date, to_date: Date) -> List[str]:
+        u: List[str] = []
+        for o in self.iterate_missing(from_date, to_date):
+            u.append(o)
+        return u
+
+    def iterate_missing(self, from_date: Date, to_date: Date) -> Iterator[str]:
         """
             Identifies objects that are not in the repository or need to be updated for the given dates
 
@@ -26,14 +32,13 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
 
             Returns
             -------
-            List[str]
-                a list of missing objects
+            Iterator[str]
+                an iterator for missing objects
         """
         self.refresh()
 
         in_y, in_q = 0, 0
         h: us_holidays = None
-        u: List[str] = []
         d: Date = from_date.copy()
 
         for _ in range(to_date.diff_days(from_date)):
@@ -49,15 +54,13 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
                 if o not in self.__index:
                     if q != in_q:
                         # Add a quartely file to the update list only if it has not been added before
-                        u.append(str(self.__object_path(DatePeriodType.QUARTER, d)))
+                        yield str(self.__object_path(DatePeriodType.QUARTER, d))
                         in_q = q
 
                     # Add a daily file to the update list
-                    u.append(o)
+                    yield o
             # next date
             d += 1
-
-        return u
 
     def __object_path(self, period_type: DatePeriodType, the_date: Date) -> FileObjectPath:
         return FileObjectPath.from_date(period_type, the_date, self.__format)

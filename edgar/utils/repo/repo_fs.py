@@ -85,6 +85,10 @@ class RepoDir(RepoEntity, metaclass=abc.ABCMeta):
 
 class RepoFS(metaclass=abc.ABCMeta):
     @abc.abstractmethod
+    def iterate_missing(self, from_date: Date, to_date: Date) -> Iterator[str]:
+        pass
+
+    @abc.abstractmethod
     def find_missing(self, from_date: Date, to_date: Date) -> List[str]:
         pass
 
