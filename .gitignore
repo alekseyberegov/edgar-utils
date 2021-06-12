@@ -130,3 +130,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Generated documentation
+docs/_build/
+docs/.doctrees/
+docs/.buildinfo

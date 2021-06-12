@@ -28,3 +28,6 @@ dev.setup:  ## Install dependencies for the development
 .PHONY: dev.test
 dev.test:  ## Run tests
 	pytest --cov=edgar
+
+dev.doc:  ## Generate documentation
+	cd docs && $(MAKE) html

@@ -1,9 +1,9 @@
-.. Edgar Utils documentation master file, created by
-   sphinx-quickstart on Mon Dec 28 21:44:01 2020.
+.. edgar-utils documentation master file, created by
+   sphinx-quickstart on Sat Jun 12 01:35:41 2021.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Edgar Utils's documentation!
+Welcome to edgar-utils's documentation!
 =======================================
 
 .. toctree::
@@ -11,6 +11,7 @@ Welcome to Edgar Utils's documentation!
    :caption: Contents:
 
    modules
+
 
 Indices and tables
 ==================
