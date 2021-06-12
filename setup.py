@@ -21,7 +21,8 @@ setup(
         "faker",
         "parse",
         "requests",
-        "sphinx"
+        "sphinx",
+        "sphinx-rtd-theme"
     ],
     classifiers=[
         # 3 - Alpha, 4 - Beta, 5 - Production/Stable
