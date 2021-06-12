@@ -1,6 +1,6 @@
 from edgar.utils.repo.repo_fs import RepoObject, RepoFS, RepoEntity, RepoFormat, RepoDirVisitor
 from edgar.utils.repo.file_repo_dir import FileRepoDir
-from edgar.utils.repo.file_object_locator import FileObjectPath as ObjectPath
+from edgar.utils.repo.file_object_locator import FileObjectPath
 from edgar.utils.date.date_utils import Date, DatePeriodType
 from edgar.utils.date.holidays import us_holidays
 from pathlib import Path
@@ -59,8 +59,8 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
 
         return u
 
-    def __object_path(self, period_type: DatePeriodType, the_date: Date) -> ObjectPath:
-        return ObjectPath.from_date(period_type, the_date, self.__format)
+    def __object_path(self, period_type: DatePeriodType, the_date: Date) -> FileObjectPath:
+        return FileObjectPath.from_date(period_type, the_date, self.__format)
 
     def get_object(self, obj_uri: str) -> RepoObject:
         """
@@ -76,7 +76,7 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             RepoObject | None
                 the repo objet at the given path. If no object is found then None is returned
         """
-        p: ObjectPath = ObjectPath(obj_uri, self.__format)
+        p: FileObjectPath = FileObjectPath(obj_uri, self.__format)
         e: RepoEntity = self.__root
         for i in p:
             if i in e:
@@ -101,7 +101,7 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             RepoObject
                 the newly created repo object
         """
-        p: ObjectPath = ObjectPath(obj_path, self.__format)
+        p: FileObjectPath = FileObjectPath(obj_path, self.__format)
         e: RepoEntity = self.__root
 
         for i in range(len(p)):
@@ -147,7 +147,7 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             RepoObject
             
         """
-        p: ObjectPath = self.__object_path(period_type, the_date)
+        p: FileObjectPath = self.__object_path(period_type, the_date)
         return self.new_object(p.parent(), p[-1])
 
     def refresh(self) -> None:
@@ -159,6 +159,6 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
         self.__root.visit(self)
 
     def visit(self, obj: RepoObject) -> bool:
-        p: ObjectPath = ObjectPath.from_object(obj, self.__format)
+        p: FileObjectPath = FileObjectPath.from_object(obj, self.__format)
         self.__index[str(p)] = obj
         return True
