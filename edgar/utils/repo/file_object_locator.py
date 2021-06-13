@@ -12,8 +12,9 @@ class FileObjectPath(object):
     This class represents an utility that helps locating objects 
     in the repository using either a relative path or date
 
-    Example:
-        ["D" | "Q"] / <YEAR> / "QTR"<QUARTER> / "master.idx"
+    Examples
+    --------
+    >>> ["D" | "Q"] / <YEAR> / "QTR"<QUARTER> / "master.idx"
     """
 
     def __init__(self, path: Union[str, List[str]], repo_format: RepoFormat) -> None:

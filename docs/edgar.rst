@@ -1,23 +1,28 @@
-edgar-utils package
-====================
+*************
+API Reference
+*************
 
-Subpackages
------------
+:mod:`edgar.utils` Package 
+==========================
 
-.. toctree::
-   :maxdepth: 6
+.. container:: submodule-index
+
+    .. rubric:: Submodules
+
+    .. toctree::
+        :maxdepth: 6
+
+        edgar.utils.date
+        edgar.utils.backfill
+        edgar.utils.repo
+
+.. container:: custom-index
+
+    .. raw:: html
+    
+        <script type="text/javascript" src='_static/edgar.js'></script>
    
-   edgar.utils.date
-   edgar.utils.backfill
-   edgar.utils.repo
-
-Submodules
-----------
-
-Module contents
----------------
-
 .. automodule:: edgar.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
+    :members:
+    :undoc-members:
+    :show-inheritance:

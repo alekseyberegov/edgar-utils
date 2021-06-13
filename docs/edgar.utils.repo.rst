@@ -1,18 +1,23 @@
 edgar.utils.repo package
 ========================
 
-Submodules
-----------
+.. container:: custom-index
+    
+    .. raw:: html
+    
+        <script type="text/javascript" src='_static/edgar.js'></script>
 
-edgar.utils.repo.file_object_locator module
---------------------------------------------
+
+:mod:`edgar.utils.repo.file_object_locator` 
+-------------------------------------------
 
 .. automodule:: edgar.utils.repo.file_object_locator
    :members:
    :undoc-members:
    :show-inheritance:
+   :inherited-members:
 
-edgar.utils.repo.file_repo_fs module
+:mod:`edgar.utils.repo.file_repo_fs`
 ------------------------------------
 
 .. automodule:: edgar.utils.repo.file_repo_fs
@@ -20,15 +25,15 @@ edgar.utils.repo.file_repo_fs module
    :undoc-members:
    :show-inheritance:
 
-edgar.utils.repo.file_repo_dir module
--------------------------------------
+:mod:`edgar.utils.repo.file_repo_dir`
+--------------------------------------------
 
 .. automodule:: edgar.utils.repo.file_repo_dir
    :members:
    :undoc-members:
    :show-inheritance:
 
-edgar.utils.repo.file_repo_object module
+:mod:`edgar.utils.repo.file_repo_object`
 ----------------------------------------
 
 .. automodule:: edgar.utils.repo.file_repo_object
@@ -36,7 +41,7 @@ edgar.utils.repo.file_repo_object module
    :undoc-members:
    :show-inheritance:
 
-edgar.utils.repo.http_repo_fs module
+:mod:`edgar.utils.repo.http_repo_fs`
 ------------------------------------
 
 .. automodule:: edgar.utils.repo.http_repo_fs
@@ -44,7 +49,7 @@ edgar.utils.repo.http_repo_fs module
    :undoc-members:
    :show-inheritance:
 
-edgar.utils.repo.http_repo_dir module
+:mod:`edgar.utils.repo.http_repo_dir`
 -------------------------------------
 
 .. automodule:: edgar.utils.repo.http_repo_dir
@@ -52,7 +57,7 @@ edgar.utils.repo.http_repo_dir module
    :undoc-members:
    :show-inheritance:
 
-edgar.utils.repo.http_repo_object module
+:mod:`edgar.utils.repo.http_repo_object`
 ----------------------------------------
 
 .. automodule:: edgar.utils.repo.http_repo_object

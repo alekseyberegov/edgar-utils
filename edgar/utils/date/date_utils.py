@@ -56,7 +56,7 @@ class DatePeriod(object):
 
 class Date(object):
     """ 
-        A date class that provides a number of useful methods to track financial fillings
+        The `Date` class is wrapper around `datetime.date` with a number of useful methods
     """
   
     def __init__(self, the_date: Union[str, date]) -> None:
@@ -64,9 +64,21 @@ class Date(object):
             Parameters
             ----------
             the_date : str | datetime.date
-                The date string in YYYY-MM-DD format or the date object
+                The date string in YYYY-MM-DD format or the `datetime.date` object
         """
         self.__the_date = date.fromisoformat(the_date) if isinstance(the_date, str) else the_date
+
+    @staticmethod
+    def yesterday() -> 'Date':
+        """
+            Returns the Date object representing yesterday date
+
+            Return
+            ------
+            Date
+                yesterday
+        """
+        return Date(date.today() - timedelta(days=1))
 
     @staticmethod
     def from_date(the_date: date) -> 'Date':
