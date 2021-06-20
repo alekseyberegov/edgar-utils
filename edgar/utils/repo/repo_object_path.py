@@ -10,7 +10,7 @@ import os
 class RepoObjectPath(object):
     """
     This class represents an utility that helps locating objects 
-    in the repository using either a relative path or date
+    in the repository using either relative path or date
 
     Examples
     --------
@@ -97,7 +97,7 @@ class RepoObjectPath(object):
 
     def __getitem__(self, key):
         """
-            Returns the key's element of the locator
+            Returns the key's element of the object path
 
             Parameters
             ----------
@@ -106,7 +106,7 @@ class RepoObjectPath(object):
             Returns
             -------
             str
-                the key's element of the locator
+                the key's element of the object path
         """
         if isinstance(key, slice):
             indices = range(*key.indices(len(self.__path)))

@@ -1,4 +1,5 @@
 from edgar.utils.repo.repo_fs import RepoObject, RepoFS, RepoEntity, RepoFormat, RepoDirVisitor
+from edgar.utils.repo.repo_object_path import RepoObjectPath
 from edgar.utils.repo.file_repo_dir import FileRepoDir
 from edgar.utils.repo.repo_object_path import RepoObjectPath
 from edgar.utils.date.date_utils import Date, DatePeriodType
