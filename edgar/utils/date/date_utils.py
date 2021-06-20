@@ -134,7 +134,7 @@ class Date(object):
             **kwargs
         )
 
-    def parts(self) -> Tuple[int, int, int, int, int, int]:
+    def tuple(self) -> Tuple[int, int, int, int, int, int]:
         return (
             self.year(),
             self.quarter(),

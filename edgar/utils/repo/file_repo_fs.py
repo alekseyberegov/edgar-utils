@@ -1,6 +1,6 @@
 from edgar.utils.repo.repo_fs import RepoObject, RepoFS, RepoEntity, RepoFormat, RepoDirVisitor
 from edgar.utils.repo.file_repo_dir import FileRepoDir
-from edgar.utils.repo.file_object_locator import FileObjectPath
+from edgar.utils.repo.file_object_locator import RepoObjectPath
 from edgar.utils.date.date_utils import Date, DatePeriodType
 from edgar.utils.date.holidays import us_holidays
 from pathlib import Path
@@ -42,7 +42,7 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
         d: Date = from_date.copy()
 
         for _ in range(to_date.diff_days(from_date)):
-            (y, q, *_) = d.parts()
+            (y, q, *_) = d.tuple()
 
             if y != in_y:
                 # Moving to the first or to the next year
@@ -62,8 +62,8 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             # next date
             d += 1
 
-    def __object_path(self, period_type: DatePeriodType, the_date: Date) -> FileObjectPath:
-        return FileObjectPath.from_date(period_type, the_date, self.__format)
+    def __object_path(self, period_type: DatePeriodType, the_date: Date) -> RepoObjectPath:
+        return RepoObjectPath.from_date(period_type, the_date, self.__format)
 
     def get_object(self, obj_uri: str) -> RepoObject:
         """
@@ -79,7 +79,7 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             RepoObject | None
                 the repo objet at the given path. If no object is found then None is returned
         """
-        p: FileObjectPath = FileObjectPath(obj_uri, self.__format)
+        p: RepoObjectPath = RepoObjectPath(obj_uri, self.__format)
         e: RepoEntity = self.__root
         for i in p:
             if i in e:
@@ -104,7 +104,7 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             RepoObject
                 the newly created repo object
         """
-        p: FileObjectPath = FileObjectPath(obj_path, self.__format)
+        p: RepoObjectPath = RepoObjectPath(obj_path, self.__format)
         e: RepoEntity = self.__root
 
         for i in range(len(p)):
@@ -150,7 +150,7 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             RepoObject
             
         """
-        p: FileObjectPath = self.__object_path(period_type, the_date)
+        p: RepoObjectPath = self.__object_path(period_type, the_date)
         return self.new_object(p.parent(), p[-1])
 
     def refresh(self) -> None:
@@ -162,6 +162,6 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
         self.__root.visit(self)
 
     def visit(self, obj: RepoObject) -> bool:
-        p: FileObjectPath = FileObjectPath.from_object(obj, self.__format)
+        p: RepoObjectPath = RepoObjectPath.from_object(obj, self.__format)
         self.__index[str(p)] = obj
         return True

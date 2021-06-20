@@ -1,4 +1,4 @@
-from edgar.utils.repo.file_repo_object import FileRepoObject
+from edgar.utils.repo.repo_fs import RepoObject
 from edgar.utils.repo.repo_fs import RepoFormatter, RepoFormat
 from edgar.utils.date.date_utils import Date, DatePeriodType
 from datetime import date
@@ -7,7 +7,7 @@ from typing import Iterator, List, Union
 import os
 
 
-class FileObjectPath(object):
+class RepoObjectPath(object):
     """
     This class represents an utility that helps locating objects 
     in the repository using either a relative path or date
@@ -31,12 +31,12 @@ class FileObjectPath(object):
         self.__format: RepoFormat = repo_format
 
     @staticmethod
-    def from_object(obj: FileRepoObject, repo_format: RepoFormat) -> 'FileObjectPath':
+    def from_object(obj: RepoObject, repo_format: RepoFormat) -> 'RepoObjectPath':
         """Get a locator for the given repo object
 
         Parameters
         ----------
-        obj: FileRepoObject
+        obj: RepoObject
             the repo object for which a locator will be returned
         repo_format: RepoFormat
             the repo format
@@ -46,11 +46,11 @@ class FileObjectPath(object):
         FileObjectLocator
             the locator for the given repo object
         """
-        return FileObjectPath(obj.subpath(len(repo_format.path_spec) + 1), repo_format)
+        return RepoObjectPath(obj.subpath(len(repo_format.path_spec) + 1), repo_format)
 
     @staticmethod
     def from_date(period_type: DatePeriodType, the_date: Date, 
-            repo_format: RepoFormat, **kwargs:object) -> 'FileObjectPath':
+            repo_format: RepoFormat, **kwargs:object) -> 'RepoObjectPath':
         """
         Get an object locator for the given date using the provided name specification
 
@@ -71,7 +71,7 @@ class FileObjectPath(object):
             the file object locator
         """
         formatter: RepoFormatter = RepoFormatter(repo_format)
-        return FileObjectPath(formatter.format(period_type, the_date, **kwargs), repo_format)
+        return RepoObjectPath(formatter.format(period_type, the_date, **kwargs), repo_format)
 
     def __len__(self) -> int:
         """
@@ -168,14 +168,9 @@ class FileObjectPath(object):
         """
         return DatePeriodType.from_string(self.get_param('t'))
 
-    def date(self, objectname_spec: str) -> Date:
+    def date(self) -> Date:
         """
-        Returns the date of the locator
-
-        Parameters
-        ----------
-        objectname_spec: `str`
-            the object name specification
+        Returns the date for the object path
 
         Returns
         -------
@@ -183,7 +178,7 @@ class FileObjectPath(object):
             the date
         """
 
-        params = parse(objectname_spec, self.__path[-1])
+        params = parse(self.__format.name_spec[DatePeriodType.DAY], self.__path[-1])
         return Date(date(int(params['y']), int(params['m']),int(params['d'])))
 
     def get_param(self, param_name: str) -> str:
@@ -208,4 +203,3 @@ class FileObjectPath(object):
                 return parse(s, self[i])[param_name]
             i += 1
         return None
-    

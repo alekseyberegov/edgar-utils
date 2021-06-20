@@ -10,14 +10,14 @@ from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 from faker import Faker
 from edgar.utils.repo.file_repo_fs import FileRepoFS
-from edgar.utils.repo.file_object_locator import FileObjectPath
+from edgar.utils.repo.file_object_locator import RepoObjectPath
 from edgar.utils.repo.file_repo_object import FileRepoObject
 from edgar.tests.globals import YEAR_LIST
 
 
 class TestFileRepoFS:
     REPO_FORMAT: RepoFormat = RepoFormat(
-        {DatePeriodType.DAY: 'master{y}{m:02}{d:02}.idx', DatePeriodType.QUARTER : 'master.idx'},
+        {DatePeriodType.DAY: 'master{y:04}{m:02}{d:02}.idx', DatePeriodType.QUARTER : 'master.idx'},
         ['{t}', '{y}', 'QTR{q}']
     )
 
@@ -58,8 +58,7 @@ class TestFileRepoFS:
     def test_find_missing(self, edgar_fs: tempfile.TemporaryDirectory):
         root: Path = Path(edgar_fs.name)
         fs: FileRepoFS = FileRepoFS(root, self.REPO_FORMAT)
-        missing: List[str] = fs.find_missing(Date('2017-09-10'), Date('2019-05-25'))
-            
+        
         holidays_sample: List[Date] = [
             Date('2018-01-01'), Date('2018-01-15'), Date('2018-02-19'),
             Date('2018-05-13'), Date('2018-05-28'), Date('2018-07-04'),
@@ -70,13 +69,13 @@ class TestFileRepoFS:
         
         q: int = 0
         d: int = 0
-        for i in missing:
-            loc: FileObjectPath = FileObjectPath(i, self.REPO_FORMAT)
-            if loc[0] == str(DatePeriodType.QUARTER):
-                assert loc[-1] == 'master.idx'
+        for i in fs.find_missing(Date('2017-09-10'), Date('2019-05-25')):
+            obj_path: RepoObjectPath = RepoObjectPath(i, self.REPO_FORMAT)
+            if obj_path[0] == str(DatePeriodType.QUARTER):
+                assert obj_path[-1] == 'master.idx'
                 q += 1
             else:
-                the_date: Date = loc.date('master{y:04}{m:02}{d:02}.idx')
+                the_date: Date = obj_path.date()
                 assert not the_date.is_weekend()
                 assert the_date not in holidays_sample
                 d += 1

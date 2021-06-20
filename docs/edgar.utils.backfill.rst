@@ -1,8 +1,8 @@
 :mod:`edgar.utils.backfill` package
 ===================================
 
-:mod:`edgar.utils.backfill.optimization` module
-------------------------------------------------
+:mod:`optimization`
+-------------------
 
 .. automodule:: edgar.utils.backfill.optimization
    :members:

@@ -18,4 +18,8 @@ class RepoPipe:
         self.__sink = sink
 
     def sync(self):
-        pass
+        end_date: Date = Date.yesterday()
+        beg_date: Date = self.__meta.start_date()
+
+        for path in self.__sink.iterate_missing(beg_date, end_date):
+            pass
