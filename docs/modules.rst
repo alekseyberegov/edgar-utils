@@ -1,6 +1,6 @@
 edgar-utils
 ===========
 .. toctree::
-   :maxdepth: 6
+   :maxdepth: 7
    
    edgar

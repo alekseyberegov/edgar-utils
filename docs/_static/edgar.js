@@ -9,14 +9,12 @@ $(function (){
         }
         
         selected.clone().each(function (i,e){
-
             var p = $(e).children('.descclassname');
             var n = $(e).children('.descname');
             var l = $(e).children('.headerlink');
 
             var a = $('<a>');
             a.attr('href',l.attr('href')).attr('title', 'Link to this definition');
-
             a.append(p).append(n);
 
             var entry = $('<li>').append(a);
@@ -26,7 +24,7 @@ $(function (){
     }
 
 
-    var c = $('<div style="float:left; min-width: 300px;">');
+    var c = $('<div style="min-width: 300px;">');
 
     var ul0 = c.clone().append($('.submodule-index'))
 

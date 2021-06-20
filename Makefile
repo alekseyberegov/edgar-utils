@@ -34,5 +34,8 @@ dev.test:  ## Run tests
 doc.html:  ## Generate HTML documentation
 	cd docs && $(MAKE) html
 
+doc.clean:  ## Clean HTML documentation
+	cd docs && $(MAKE) clean
+
 doc.open:  ## Open the documentation in the default browser
 	python -m webbrowser $(DOC_INDEX)

@@ -54,7 +54,7 @@ autoclass_content = 'both'
 html_theme = 'sphinx_rtd_theme'
 
 html_theme_options = {
-    #"sidebarwidth": "25%",
+    "sidebarwidth": "45%",
 }   
 
 # Add any paths that contain custom static files (such as style sheets) here,
