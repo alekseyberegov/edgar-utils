@@ -18,7 +18,7 @@ class RepoFormat:
 
         Examples
         -------- 
-        >>> master{y}{m:02}{d:02}.idx
+        >>> master{y:04}{m:02}{d:02}.idx
     """
     name_spec: Dict[DatePeriodType, str] 
 

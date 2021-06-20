@@ -9,10 +9,10 @@
       <script type="text/javascript" src='_static/edgar.js'></script>
 
 
-:mod:`file_object_locator`
+:mod:`repo_object_path`
 --------------------------
 
-.. automodule:: edgar.utils.repo.file_object_locator
+.. automodule:: edgar.utils.repo.repo_object_path
    :members:
    :undoc-members:
    :show-inheritance:
