@@ -19,7 +19,7 @@ class TestFileObjectLocator:
         ('D/2020/QTR1/master20200125.idx', 'D', 1, 2020, '2020-01-25'),
     ])    
     def test_init_with_path(self, path: str, date_period: str, quarter: int, year: int, date_str: str) -> None:
-        obj_path: RepoObjectPath = RepoObjectPath(path, self.REPO_FORMAT)
+        obj_path: RepoObjectPath = RepoObjectPath.from_uri(path, self.REPO_FORMAT)
         assert obj_path.date_period_type() == DatePeriodType.from_string(date_period)
         assert obj_path.year() == year
         assert obj_path.quarter() == quarter
@@ -31,7 +31,7 @@ class TestFileObjectLocator:
         (['D','2020','QTR1','master20200125.idx'], 'D', 1, 2020, '2020-01-25'),
     ])    
     def test_init_with_list(self, path: List[str], date_period: str, quarter: int, year: int, date_str: str) -> None:
-        obj_path: RepoObjectPath = RepoObjectPath(path, self.REPO_FORMAT)
+        obj_path: RepoObjectPath = RepoObjectPath.from_list(path, self.REPO_FORMAT)
         assert obj_path.date_period_type() == DatePeriodType.from_string(date_period)
         assert obj_path.year() == year
         assert obj_path.quarter() == quarter
@@ -53,7 +53,7 @@ class TestFileObjectLocator:
         (['D','2020','QTR1','master20200125.idx'], 'D/2020/QTR1'),
     ])    
     def test_parent_success(self, path:List[str], parent:str):
-        obj_path: RepoObjectPath = RepoObjectPath(path, self.REPO_FORMAT)
+        obj_path: RepoObjectPath = RepoObjectPath.from_list(path, self.REPO_FORMAT)
         assert obj_path.parent() == parent
         
     @pytest.mark.parametrize("path, date_period, quarter, year, date_str", [
@@ -62,7 +62,7 @@ class TestFileObjectLocator:
         (['D','2020','QTR1','master20200125.idx'], 'D', 'QTR1', '2020', '2020-01-25'),
     ])    
     def test_getitem(self, path:List[str], date_period: str, quarter: str, year: int, date_str: str) -> None:
-        obj_path: RepoObjectPath = RepoObjectPath(path, self.REPO_FORMAT)
+        obj_path: RepoObjectPath = RepoObjectPath.from_list(path, self.REPO_FORMAT)
         assert obj_path[0] == date_period
         assert obj_path[1] == year
         assert obj_path[2] == quarter
@@ -74,5 +74,5 @@ class TestFileObjectLocator:
         (['D','2020','QTR1','master20200125.idx'], 'D/2020/QTR1/master20200125.idx'),
     ])  
     def test_str(self, path: List[str], expected_result: str) -> None:
-        obj_path: RepoObjectPath = RepoObjectPath(path, self.REPO_FORMAT)
+        obj_path: RepoObjectPath = RepoObjectPath.from_list(path, self.REPO_FORMAT)
         assert str(obj_path) == expected_result

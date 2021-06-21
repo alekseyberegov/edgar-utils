@@ -70,7 +70,7 @@ class TestFileRepoFS:
         q: int = 0
         d: int = 0
         for i in fs.find_missing(Date('2017-09-10'), Date('2019-05-25')):
-            obj_path: RepoObjectPath = RepoObjectPath(i, self.REPO_FORMAT)
+            obj_path: RepoObjectPath = RepoObjectPath.from_uri(i, self.REPO_FORMAT)
             if obj_path[0] == str(DatePeriodType.QUARTER):
                 assert obj_path[-1] == 'master.idx'
                 q += 1

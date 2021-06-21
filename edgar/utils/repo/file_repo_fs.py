@@ -1,7 +1,6 @@
 from edgar.utils.repo.repo_fs import RepoObject, RepoFS, RepoEntity, RepoFormat, RepoDirVisitor
 from edgar.utils.repo.repo_object_path import RepoObjectPath
 from edgar.utils.repo.file_repo_dir import FileRepoDir
-from edgar.utils.repo.repo_object_path import RepoObjectPath
 from edgar.utils.date.date_utils import Date, DatePeriodType
 from edgar.utils.date.holidays import us_holidays
 from pathlib import Path
@@ -80,7 +79,7 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             RepoObject | None
                 the repo objet at the given path. If no object is found then None is returned
         """
-        p: RepoObjectPath = RepoObjectPath(obj_uri, self.__format)
+        p: RepoObjectPath = RepoObjectPath.from_uri(obj_uri, self.__format)
         e: RepoEntity = self.__root
         for i in p:
             if i in e:
@@ -105,7 +104,7 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             RepoObject
                 the newly created repo object
         """
-        p: RepoObjectPath = RepoObjectPath(obj_path, self.__format)
+        p: RepoObjectPath = RepoObjectPath.from_uri(obj_path, self.__format)
         e: RepoEntity = self.__root
 
         for i in range(len(p)):
