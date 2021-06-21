@@ -16,10 +16,10 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
     def find_missing(self, from_date: Date, to_date: Date) -> List[str]:
         u: List[str] = []
         for o in self.iterate_missing(from_date, to_date):
-            u.append(o)
+            u.append(str(o))
         return u
 
-    def iterate_missing(self, from_date: Date, to_date: Date) -> Iterator[str]:
+    def iterate_missing(self, from_date: Date, to_date: Date) -> Iterator:
         """
             Identifies objects that are not in the repository or need to be updated for the given dates
 
@@ -50,20 +50,17 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
                 in_y, in_q = y, 0
 
             if not (d.is_weekend() or d in h):
-                o: str = str(self.__object_path(DatePeriodType.DAY, d))
-                if o not in self.__index:
+                o: RepoObjectPath = RepoObjectPath.from_date(DatePeriodType.DAY, d, self.__format)
+                if str(o) not in self.__index:
                     if q != in_q:
                         # Add a quartely file to the update list only if it has not been added before
-                        yield str(self.__object_path(DatePeriodType.QUARTER, d))
+                        yield RepoObjectPath.from_date(DatePeriodType.QUARTER, d, self.__format)
                         in_q = q
 
                     # Add a daily file to the update list
                     yield o
             # next date
             d += 1
-
-    def __object_path(self, period_type: DatePeriodType, the_date: Date) -> RepoObjectPath:
-        return RepoObjectPath.from_date(period_type, the_date, self.__format)
 
     def get_object(self, obj_uri: str) -> RepoObject:
         """
@@ -132,7 +129,7 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             RepoObject
                 the object
         """
-        return self.get_object(str(self.__object_path(period_type, the_date)))
+        return self.get_object(str(RepoObjectPath.from_date(period_type, the_date, self.__format)))
 
     def create(self, period_type: DatePeriodType, the_date: Date) -> RepoObject:
         """
@@ -150,7 +147,7 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             RepoObject
             
         """
-        p: RepoObjectPath = self.__object_path(period_type, the_date)
+        p: RepoObjectPath = RepoObjectPath.from_date(period_type, the_date, self.__format)
         return self.new_object(p.parent(), p[-1])
 
     def refresh(self) -> None:

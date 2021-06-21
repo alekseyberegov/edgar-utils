@@ -10,7 +10,7 @@ class HttpRepoFS(RepoFS):
         self.__formatter = formatter
         self.__root = HttpRepoDir(base_url)
 
-    def iterate_missing(self, from_date: Date, to_date: Date) -> Iterator[str]:
+    def iterate_missing(self, from_date: Date, to_date: Date) -> Iterator:
         yield from ()
 
     def find_missing(self, from_date: Date, to_date: Date) -> List[str]:
