@@ -1,6 +1,6 @@
 import abc
 from dataclasses import dataclass
-from typing import Iterator, List, Dict
+from typing import Iterator, List, Dict, Tuple
 
 from edgar.utils.date.date_utils import Date, DatePeriodType
 
@@ -24,6 +24,10 @@ class RepoFormat:
 
     """
         The path specification for objects in the repository.
+
+        Examples
+        --------
+        >>> ['{t}', '{y}', 'QTR{q}']
     """
     path_spec: List[str]
 
@@ -84,8 +88,9 @@ class RepoDir(RepoEntity, metaclass=abc.ABCMeta):
         pass
 
 class RepoFS(metaclass=abc.ABCMeta):
+    from edgar.utils.repo.repo_object_path import RepoObjectPath
     @abc.abstractmethod
-    def iterate_missing(self, from_date: Date, to_date: Date) -> Iterator:
+    def iterate_missing(self, from_date: Date, to_date: Date) -> Iterator[RepoObjectPath]:
         pass
 
     @abc.abstractmethod
@@ -107,4 +112,17 @@ class RepoFS(metaclass=abc.ABCMeta):
 class RepoDirVisitor(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def visit(self, object: RepoObject) -> bool:
+        pass
+
+class RepoTransaction(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def commit(self, date: Date) -> None:
+        pass
+
+    @abc.abstractmethod
+    def added(self, period_type: DatePeriodType, the_date: Date) -> None:
+        pass
+
+    @abc.abstractmethod
+    def date_range(self) -> Tuple[Date,Date]:
         pass

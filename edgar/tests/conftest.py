@@ -1,3 +1,4 @@
+from edgar.utils.repo.repo_fs import RepoFormat
 import pytest, tempfile
 from faker import Faker
 from pathlib import Path
@@ -10,6 +11,14 @@ from edgar.tests.globals import YEAR_LIST, QUARTER_LIST, FILE_PER_DIR, EDGAR_QUA
 def fake():
     fake = Faker()
     return fake
+
+@pytest.fixture
+def repo_format() -> RepoFormat:
+  return RepoFormat(
+        {DatePeriodType.DAY: 'master{y:04}{m:02}{d:02}.idx', DatePeriodType.QUARTER : 'master.idx'},
+        ['{t}', '{y}', 'QTR{q}']
+    )
+
 
 @pytest.fixture
 def dir_empty() -> tempfile.TemporaryDirectory:
