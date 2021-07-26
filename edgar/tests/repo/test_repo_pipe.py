@@ -33,9 +33,11 @@ class TestRepoPipe:
     def test_sync_ndays(self, repo_tx, sink_fs: FileRepoFS, missing: Iterator[RepoObjectPath]) -> None:
         src_fs = mock.MagicMock()
         src_fs.find.side_effect = self.mock_find
-        src_fs.iterate_missing.return_value = missing
         pipe: RepoPipe = RepoPipe(repo_tx, src_fs, sink_fs)
-        pipe.sync()
+
+        with mock.patch("edgar.utils.repo.file_repo_fs.FileRepoFS.iterate_missing") as m:
+            m.return_value = missing
+            pipe.sync()
 
         for m in missing:
             period_type = m.date_period_type()
@@ -47,6 +49,18 @@ class TestRepoPipe:
         (beg_date, end_date) = repo_tx.date_range()
         assert sink_fs.find(DatePeriodType.DAY, beg_date) == None
         assert sink_fs.find(DatePeriodType.DAY, end_date) == None
+
+        d: Date = Date('2021-07-12')
+        for i, c in enumerate(repo_tx.mock_calls):
+            if i == 0:
+                assert c[0] == 'date_range'
+            if i in [1,2,3]:
+                assert c[0] == 'added'
+                assert c[1][0] == DatePeriodType.DAY
+                assert c[1][1] == d
+                d += 1
+            if i == 4:
+                assert c[0] == 'commit'
 
     def mock_find(self, *args, **kwargs):
         obj = mock.MagicMock()
