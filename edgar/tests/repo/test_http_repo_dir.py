@@ -1,9 +1,8 @@
 from edgar.utils.repo.http_repo_object import HttpRepoObject
 import unittest
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import Mock, patch, call
 from edgar.utils.repo.http_repo_dir import HttpRepoDir
-from edgar.tests.mock import MockResponse
-from typing import Iterator
+
 
 class TestHttpRepoDir(unittest.TestCase):
     def setUp(self) -> None:
@@ -17,11 +16,11 @@ class TestHttpRepoDir(unittest.TestCase):
     def test_as_uri(self) -> None:
        assert self.dir.as_uri() == 'http://www.site.com/a/b/c/'
 
-    @patch('requests.head', return_value=MockResponse([], 200))
+    @patch('requests.head', return_value=Mock(status_code=200, **{'iter_content.return_value':[]}))
     def test_exists(self, mock_head):
         assert self.dir.exists()
 
-    @patch('requests.head', return_value=MockResponse([], 400))
+    @patch('requests.head', return_value=Mock(status_code=400, **{'iter_content.return_value':[]}))
     def test_not_exists(self, mock_head):
         assert not self.dir.exists()
 

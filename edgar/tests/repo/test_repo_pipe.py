@@ -19,7 +19,6 @@ def repo_tx():
     tx.date_range.return_value = (Date('2021-01-01'), Date('2021-08-01'))
     return tx
 
-
 @pytest.fixture
 def missing(repo_format: RepoFormat) -> Iterator[RepoObjectPath]:
     return iter([
@@ -27,7 +26,6 @@ def missing(repo_format: RepoFormat) -> Iterator[RepoObjectPath]:
         RepoObjectPath.from_date(DatePeriodType.DAY, Date('2021-07-13'), repo_format),
         RepoObjectPath.from_date(DatePeriodType.DAY, Date('2021-07-14'), repo_format),
     ])
-
 
 class TestRepoPipe:
     def test_sync_ndays(self, repo_tx, sink_fs: FileRepoFS, missing: Iterator[RepoObjectPath]) -> None:
@@ -54,12 +52,14 @@ class TestRepoPipe:
         for i, c in enumerate(repo_tx.mock_calls):
             if i == 0:
                 assert c[0] == 'date_range'
-            if i in [1,2,3]:
-                assert c[0] == 'added'
+            if i == 1:
+                assert c[0] == 'start'
+            if i in [2,3,4]:
+                assert c[0] == 'create'
                 assert c[1][0] == DatePeriodType.DAY
                 assert c[1][1] == d
                 d += 1
-            if i == 4:
+            if i == 5:
                 assert c[0] == 'commit'
 
     def mock_find(self, *args, **kwargs):

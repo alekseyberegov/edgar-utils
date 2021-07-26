@@ -116,11 +116,18 @@ class RepoDirVisitor(metaclass=abc.ABCMeta):
 
 class RepoTransaction(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def commit(self, date: Date) -> None:
+    def start(self, date: Date) -> None:
         pass
 
     @abc.abstractmethod
-    def added(self, period_type: DatePeriodType, the_date: Date) -> None:
+    def commit(self, date: Date) -> None:
+        pass
+
+    def error(self, date: Date, error: str) -> None:
+        pass
+    
+    @abc.abstractmethod
+    def create(self, period_type: DatePeriodType, the_date: Date) -> None:
         pass
 
     @abc.abstractmethod
