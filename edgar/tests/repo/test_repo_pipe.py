@@ -8,6 +8,7 @@ from edgar.utils.repo.repo_pipe import RepoPipe
 from edgar.utils.repo.repo_fs import RepoFormat, RepoObject
 from edgar.utils.repo.repo_object_path import RepoObjectPath
 from edgar.utils.repo.file_repo_fs import FileRepoFS
+from edgar.tests.mock import CallTracker
 
 @pytest.fixture
 def sink_fs(dir_empty: tempfile.TemporaryDirectory, repo_format: RepoFormat):
@@ -44,23 +45,18 @@ class TestRepoPipe:
             assert ' '.join([str(period_type), str(the_date)]) == next(o.inp(bufsize=1024))
             assert o.exists()
 
+        tracker: CallTracker = CallTracker()
+        tracker.add_expected('date_range', [])
+        tracker.add_expected('start' , [Date('2021-01-01')])
+        tracker.add_expected('create', [DatePeriodType.DAY, Date('2021-07-12')])
+        tracker.add_expected('create', [DatePeriodType.DAY, Date('2021-07-13')])
+        tracker.add_expected('create', [DatePeriodType.DAY, Date('2021-07-14')])
+        tracker.add_expected('commit', [Date('2021-08-01')])
+        tracker.assertCalls(repo_tx.mock_calls)
+
         (beg_date, end_date) = repo_tx.date_range()
         assert sink_fs.find(DatePeriodType.DAY, beg_date) == None
         assert sink_fs.find(DatePeriodType.DAY, end_date) == None
-
-        d: Date = Date('2021-07-12')
-        for i, c in enumerate(repo_tx.mock_calls):
-            if i == 0:
-                assert c[0] == 'date_range'
-            if i == 1:
-                assert c[0] == 'start'
-            if i in [2,3,4]:
-                assert c[0] == 'create'
-                assert c[1][0] == DatePeriodType.DAY
-                assert c[1][1] == d
-                d += 1
-            if i == 5:
-                assert c[0] == 'commit'
 
     def mock_find(self, *args, **kwargs):
         obj = mock.MagicMock()
