@@ -1,6 +1,6 @@
 import json
 import unittest
-from edgar.utils.repo.repo_fs import RepoFormat
+from edgar.utils.repo.repo_format import RepoFormat
 from edgar.utils.date.date_utils import DatePeriodType
 from edgar.utils.repo.serdeser import dataclass_json_dump
 

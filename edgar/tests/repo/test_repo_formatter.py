@@ -1,6 +1,6 @@
 import pytest
 
-from edgar.utils.repo.repo_fs import RepoFormatter, RepoFormat
+from edgar.utils.repo.repo_format import RepoFormatter, RepoFormat
 from edgar.utils.date.date_utils import DatePeriodType, Date
 from typing import List
 

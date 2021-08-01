@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import Iterator
 from edgar.utils.date.date_utils import Date, DatePeriodType
 from edgar.utils.repo.repo_pipe import RepoPipe
-from edgar.utils.repo.repo_fs import RepoFormat, RepoObject
-from edgar.utils.repo.repo_object_path import RepoObjectPath
+from edgar.utils.repo.repo_fs import RepoObject
+from edgar.utils.repo.repo_format import RepoObjectPath, RepoFormat
 from edgar.utils.repo.file_repo_fs import FileRepoFS
 from edgar.tests.mock import CallTracker
 

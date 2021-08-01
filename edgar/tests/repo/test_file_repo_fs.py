@@ -1,12 +1,11 @@
 import pytest
 import tempfile
 
-from edgar.utils.repo.repo_fs import RepoFormat
+from edgar.utils.repo.repo_format import RepoFormat, RepoObjectPath
 from edgar.utils.date.date_utils import DatePeriodType, Date
 from typing import List
 from pathlib import Path
 from edgar.utils.repo.file_repo_fs import FileRepoFS
-from edgar.utils.repo.repo_object_path import RepoObjectPath
 from edgar.utils.repo.file_repo_object import FileRepoObject
 from edgar.tests.globals import YEAR_LIST
 

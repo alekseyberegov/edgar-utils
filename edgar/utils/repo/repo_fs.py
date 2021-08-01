@@ -1,56 +1,6 @@
 import abc
-from dataclasses import dataclass
 from typing import Iterator, List, Dict, Tuple
-
 from edgar.utils.date.date_utils import Date, DatePeriodType
-
-@dataclass
-class RepoFormat:
-    """
-        The object name specifications by the date period type
-        
-        Available macros are:
-                    - {q} for the quarter
-                    - {d} for the day number
-                    - {m} for the month number
-                    - {y} for the 4-digit year number
-                    - {t} for the date period type
-
-        Examples
-        -------- 
-        >>> master{y:04}{m:02}{d:02}.idx
-    """
-    name_spec: Dict[DatePeriodType, str] 
-
-    """
-        The path specification for objects in the repository.
-
-        Examples
-        --------
-        >>> ['{t}', '{y}', 'QTR{q}']
-    """
-    path_spec: List[str]
-
-
-class RepoFormatter:
-    def __init__(self, format: RepoFormat) -> None:
-        self.__format = format
-        self.__macros = {}
-
-    def __setitem__(self, key, val):
-        self.__macros[key] = val
-
-    def format(self, period_type: DatePeriodType, the_date: Date, **kwargs) -> List[str]:
-        name_spec = self.__format.name_spec[period_type]
-        path_spec = self.__format.path_spec
-
-        eval_macros = dict(kwargs)
-        for name, func in self.__macros.items():
-            eval_macros[name] = func(period_type, the_date)
-
-        return [*[the_date.format(s, period_type, **eval_macros) for s in path_spec], 
-            the_date.format(name_spec, period_type, **eval_macros)]
-
 
 class RepoEntity(metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -87,10 +37,28 @@ class RepoDir(RepoEntity, metaclass=abc.ABCMeta):
     def refresh(self) -> None:
         pass
 
-class RepoFS(metaclass=abc.ABCMeta):
-    from edgar.utils.repo.repo_object_path import RepoObjectPath
+
+class RepoURI(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def iterate_missing(self, from_date: Date, to_date: Date) -> Iterator[RepoObjectPath]:
+    def date(self) -> Date:
+        pass
+
+    @abc.abstractmethod
+    def date_period_type(self) -> DatePeriodType:
+        pass
+
+    @abc.abstractmethod
+    def quarter(self) -> int:
+        pass
+
+    @abc.abstractmethod
+    def year(self) -> int:
+        pass
+
+
+class RepoFS(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def iterate_missing(self, from_date: Date, to_date: Date) -> Iterator[RepoURI]:
         pass
 
     @abc.abstractmethod

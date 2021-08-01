@@ -2,10 +2,9 @@ import pytest, tempfile, unittest
 from typing import List
 from pathlib import Path
 
-from edgar.utils.repo.repo_object_path import RepoObjectPath
+from edgar.utils.repo.repo_format import RepoObjectPath, RepoFormat
 from edgar.utils.repo.file_repo_dir import FileRepoDir
 from edgar.utils.date.date_utils import Date, DatePeriodType
-from edgar.utils.repo.repo_fs import RepoFormat
 
 class TestFileObjectLocator:
     REPO_FORMAT: RepoFormat = RepoFormat(

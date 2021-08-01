@@ -1,5 +1,5 @@
-from edgar.utils.repo.repo_fs import RepoObject, RepoFS, RepoEntity, RepoFormat, RepoDirVisitor
-from edgar.utils.repo.repo_object_path import RepoObjectPath
+from edgar.utils.repo.repo_fs import RepoObject, RepoFS, RepoEntity, RepoDirVisitor, RepoURI
+from edgar.utils.repo.repo_format import RepoObjectPath, RepoFormat
 from edgar.utils.repo.file_repo_dir import FileRepoDir
 from edgar.utils.date.date_utils import Date, DatePeriodType
 from edgar.utils.date.holidays import us_holidays
@@ -19,7 +19,7 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             u.append(str(o))
         return u
 
-    def iterate_missing(self, from_date: Date, to_date: Date) -> Iterator:
+    def iterate_missing(self, from_date: Date, to_date: Date) -> Iterator[RepoURI]:
         """
             Identifies objects that are not in the repository or need to be updated for the given dates
 

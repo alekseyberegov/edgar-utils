@@ -1,13 +1,60 @@
-from edgar.utils.repo.repo_fs import RepoObject
-from edgar.utils.repo.repo_fs import RepoFormatter, RepoFormat
+from edgar.utils.repo.repo_fs import RepoObject, RepoURI
 from edgar.utils.date.date_utils import Date, DatePeriodType
 from datetime import date
 from parse import parse
-from typing import Iterator, List, Union
+from typing import Iterator, List, Dict
+from dataclasses import dataclass
 import os
 
+@dataclass
+class RepoFormat:
+    """
+        The object name specifications by the date period type
+        
+        Available macros are:
+                    - {q} for the quarter
+                    - {d} for the day number
+                    - {m} for the month number
+                    - {y} for the 4-digit year number
+                    - {t} for the date period type
 
-class RepoObjectPath(object):
+        Examples
+        -------- 
+        >>> master{y:04}{m:02}{d:02}.idx
+    """
+    name_spec: Dict[DatePeriodType, str] 
+
+    """
+        The path specification for objects in the repository.
+
+        Examples
+        --------
+        >>> ['{t}', '{y}', 'QTR{q}']
+    """
+    path_spec: List[str]
+
+
+class RepoFormatter:
+    def __init__(self, format: RepoFormat) -> None:
+        self.__format = format
+        self.__macros = {}
+
+    def __setitem__(self, key, val):
+        self.__macros[key] = val
+
+    def format(self, period_type: DatePeriodType, the_date: Date, **kwargs) -> List[str]:
+        name_spec = self.__format.name_spec[period_type]
+        path_spec = self.__format.path_spec
+
+        eval_macros = dict(kwargs)
+        for name, func in self.__macros.items():
+            eval_macros[name] = func(period_type, the_date)
+
+        return [*[the_date.format(s, period_type, **eval_macros) for s in path_spec], 
+            the_date.format(name_spec, period_type, **eval_macros)]
+
+
+class RepoObjectPath(RepoURI):
     """
     This class represents an utility that helps locating objects 
     in the repository using either relative path or date

@@ -3,7 +3,7 @@ import pytest, unittest
 from edgar.utils.repo.http_repo_fs import HttpRepoFS
 from edgar.utils.repo.http_repo_object import HttpRepoObject
 from edgar.utils.repo.http_tools import get_index_macro
-from edgar.utils.repo.repo_fs import RepoFormat, RepoFormatter, RepoObject
+from edgar.utils.repo.repo_format import RepoFormat, RepoFormatter
 from edgar.utils.date.date_utils import DatePeriodType, Date
 
 class TestHttpRepoFS:

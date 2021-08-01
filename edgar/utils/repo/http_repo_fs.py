@@ -1,7 +1,8 @@
-from edgar.utils.repo.repo_fs import RepoFS, RepoObject, RepoFormatter
+from edgar.utils.repo.repo_fs import RepoFS, RepoObject
 from edgar.utils.repo.http_repo_dir import HttpRepoDir
 from edgar.utils.repo.http_repo_object import HttpRepoObject
 from edgar.utils.date.date_utils import DatePeriodType, Date
+from edgar.utils.repo.repo_format import RepoFormatter
 from edgar.utils.repo.http_tools import make_url
 from typing import List, Iterator
 

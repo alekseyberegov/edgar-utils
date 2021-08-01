@@ -1,4 +1,4 @@
-from edgar.utils.repo.repo_fs import RepoFormat
+from edgar.utils.repo.repo_format import RepoFormat
 import pytest, tempfile
 from faker import Faker
 from pathlib import Path
