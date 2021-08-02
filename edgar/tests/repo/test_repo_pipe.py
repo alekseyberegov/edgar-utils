@@ -58,10 +58,6 @@ class TestRepoPipe:
         assert sink_fs.find(DatePeriodType.DAY, beg_date) == None
         assert sink_fs.find(DatePeriodType.DAY, end_date) == None
 
-    def mock_find(self, *args, **kwargs):
-        obj = mock.MagicMock()
-        obj.inp.return_value = iter([str(args[0]), ' ', str(args[1])])
-        return obj
 
     @mock.patch("edgar.utils.repo.file_repo_fs.FileRepoFS.iterate_missing")
     def test_sync_missing_error(self, iterate_missing, repo_tx, sink_fs: FileRepoFS) -> None:
@@ -74,11 +70,33 @@ class TestRepoPipe:
 
         tracker: CallTracker = CallTracker()
         tracker.add_expected('date_range', [])
-        tracker.add_expected('start' , [Date('2021-01-01')])
+        tracker.add_expected('start', [Date('2021-01-01')])
         tracker.add_expected('error', [None, repr(error)] )
         tracker.assertCalls(repo_tx.mock_calls)
 
     @mock.patch("edgar.utils.repo.file_repo_fs.FileRepoFS.create")
     @mock.patch("edgar.utils.repo.file_repo_fs.FileRepoFS.iterate_missing")
-    def test_sync_create_error(self, iterate_missing, create, repo_tx, sink_fs: FileRepoFS) -> None:
-        pass
+    def test_sync_create_error(self, iterate_missing, create, repo_tx, sink_fs: FileRepoFS, missing: Iterator[RepoObjectPath]) -> None:
+        src_fs = mock.MagicMock()
+        src_fs.find.side_effect = self.mock_find
+        iterate_missing.return_value = missing
+        create.side_effect = self.mock_create
+        pipe: RepoPipe = RepoPipe(repo_tx, src_fs, sink_fs)
+        pipe.sync()
+
+        tracker: CallTracker = CallTracker()
+        tracker.add_expected('date_range', [])
+        tracker.add_expected('start' , [Date('2021-01-01')])
+        tracker.add_expected('create', [DatePeriodType.DAY, Date('2021-07-12')])
+        tracker.add_expected('error',  [Date('2021-07-13'), repr(FileExistsError())])
+        tracker.assertCalls(repo_tx.mock_calls)
+
+    def mock_find(self, *args, **kwargs):
+        obj = mock.MagicMock()
+        obj.inp.return_value = iter([str(args[0]), ' ', str(args[1])])
+        return obj
+
+    def mock_create(self, *args, **kwargs):
+        if str(args[1]) == '2021-07-13':
+            raise FileExistsError()
+        return mock.MagicMock()
