@@ -91,6 +91,7 @@ class RepoTransaction(metaclass=abc.ABCMeta):
     def commit(self, date: Date) -> None:
         pass
 
+    @abc.abstractmethod
     def error(self, date: Date, error: str) -> None:
         pass
     

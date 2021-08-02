@@ -9,10 +9,10 @@
       <script type="text/javascript" src='_static/edgar.js'></script>
 
 
-:mod:`repo_object_path`
+:mod:`repo_format`
 --------------------------
 
-.. automodule:: edgar.utils.repo.repo_object_path
+.. automodule:: edgar.utils.repo.repo_format
    :members:
    :undoc-members:
    :show-inheritance:
@@ -22,6 +22,15 @@
 --------------
 
 .. automodule:: edgar.utils.repo.repo_fs
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+
+:mod:`repo_pipe`
+----------------
+
+.. automodule:: edgar.utils.repo.repo_pipe
    :members:
    :undoc-members:
    :show-inheritance:

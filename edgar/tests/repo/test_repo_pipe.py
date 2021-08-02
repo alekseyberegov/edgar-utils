@@ -62,3 +62,23 @@ class TestRepoPipe:
         obj = mock.MagicMock()
         obj.inp.return_value = iter([str(args[0]), ' ', str(args[1])])
         return obj
+
+    @mock.patch("edgar.utils.repo.file_repo_fs.FileRepoFS.iterate_missing")
+    def test_sync_missing_error(self, iterate_missing, repo_tx, sink_fs: FileRepoFS) -> None:
+        src_fs = mock.MagicMock()
+        src_fs.find.side_effect = self.mock_find
+        error: FileNotFoundError = FileNotFoundError()
+        iterate_missing.side_effect = error
+        pipe: RepoPipe = RepoPipe(repo_tx, src_fs, sink_fs)
+        pipe.sync()
+
+        tracker: CallTracker = CallTracker()
+        tracker.add_expected('date_range', [])
+        tracker.add_expected('start' , [Date('2021-01-01')])
+        tracker.add_expected('error', [None, repr(error)] )
+        tracker.assertCalls(repo_tx.mock_calls)
+
+    @mock.patch("edgar.utils.repo.file_repo_fs.FileRepoFS.create")
+    @mock.patch("edgar.utils.repo.file_repo_fs.FileRepoFS.iterate_missing")
+    def test_sync_create_error(self, iterate_missing, create, repo_tx, sink_fs: FileRepoFS) -> None:
+        pass
