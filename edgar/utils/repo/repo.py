@@ -1,9 +1,9 @@
 from edgar.utils.repo.repo_fs import RepoFS
 
-class Repo(object):
+class Repo:
     def __init__(self, repo_fs: RepoFS) -> None:
         self._repo_fs = repo_fs
-    
+
     @property.getter
     def fs(self) -> RepoFS:
         return self._repo_fs

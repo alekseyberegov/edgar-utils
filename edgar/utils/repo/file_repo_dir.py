@@ -1,8 +1,8 @@
+from typing import Dict, Tuple, List
+from pathlib import Path
+import datetime
 from edgar.utils.repo.repo_fs import RepoDir, RepoObject, RepoEntity, RepoDirVisitor
 from edgar.utils.repo.file_repo_object import FileRepoObject
-from pathlib import Path
-from typing import Dict, Tuple, List
-import datetime, abc
 
 class FileRepoDir(RepoDir):
     """The repo directory for a regular file system
@@ -40,7 +40,8 @@ class FileRepoDir(RepoDir):
                 if e.name not in self:
                     self[e.name] = FileRepoDir(e, self) if e.is_dir() else FileRepoObject(self, e.name)
                 else:
-                    if e.is_dir(): self[e.name].refresh()
+                    if e.is_dir():
+                        self[e.name].refresh()
 
     def __iter__(self):
         return iter(self.__children.items())
@@ -112,7 +113,7 @@ class FileRepoDir(RepoDir):
     def subpath(self, levels: int) -> List[str]:
         if levels <= 0:
             return []
-        else:
-            p = self.__parent.subpath(levels - 1)
-            p.append(self.__path.name)
-            return p
+
+        p = self.__parent.subpath(levels - 1)
+        p.append(self.__path.name)
+        return p

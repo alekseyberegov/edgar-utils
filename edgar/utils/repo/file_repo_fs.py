@@ -1,16 +1,16 @@
+from typing import Dict, List, Iterator
+from pathlib import Path
 from edgar.utils.repo.repo_fs import RepoObject, RepoFS, RepoEntity, RepoDirVisitor, RepoURI
 from edgar.utils.repo.repo_format import RepoObjectPath, RepoFormat
 from edgar.utils.repo.file_repo_dir import FileRepoDir
 from edgar.utils.date.date_utils import Date, DatePeriodType
 from edgar.utils.date.holidays import us_holidays
-from pathlib import Path
-from typing import Dict, List, Iterator
 
 
 class FileRepoFS(RepoFS, RepoDirVisitor):
-    def __init__(self, root: Path, format: RepoFormat) -> None:
+    def __init__(self, root: Path, repo_format: RepoFormat) -> None:
         self.__root     : FileRepoDir = FileRepoDir(root)
-        self.__format   : RepoFormat = format
+        self.__format   : RepoFormat = repo_format
         self.__index    : Dict[str, RepoObject] = {}
 
     def find_missing(self, from_date: Date, to_date: Date) -> List[str]:
@@ -21,7 +21,8 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
 
     def iterate_missing(self, from_date: Date, to_date: Date) -> Iterator[RepoURI]:
         """
-            Identifies objects that are not in the repository or need to be updated for the given dates
+            Identifies objects that are not in the repository
+            or need to be updated for the given dates
 
             Parameters
             ----------
@@ -53,7 +54,8 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
                 o: RepoObjectPath = RepoObjectPath.from_date(DatePeriodType.DAY, d, self.__format)
                 if str(o) not in self.__index:
                     if q != in_q:
-                        # Add a quartely file to the update list only if it has not been added before
+                        # Add a quartely file to the update list
+                        # only if it has not been added before
                         yield RepoObjectPath.from_date(DatePeriodType.QUARTER, d, self.__format)
                         in_q = q
 
@@ -82,7 +84,7 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             if i in e:
                 e = e[i]
             else:
-               return None
+                return None
         return e
 
     def new_object(self, obj_path: str, obj_name: str) -> RepoObject:

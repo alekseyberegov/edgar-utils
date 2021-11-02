@@ -20,7 +20,7 @@ class RepoPipe:
                 dst_obj: RepoObject = self.__sink.create(period_type, the_date)
                 dst_obj.out(src_obj.inp(), override=True)
                 self.__trans.create(period_type, the_date)
-        except Exception as e:
-            self.__trans.error(the_date, repr(e))
+        except Exception as any_exp:
+            self.__trans.error(the_date, repr(any_exp))
         else:
             self.__trans.commit(end_date)

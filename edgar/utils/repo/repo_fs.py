@@ -79,7 +79,7 @@ class RepoFS(metaclass=abc.ABCMeta):
 
 class RepoDirVisitor(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def visit(self, object: RepoObject) -> bool:
+    def visit(self, obj: RepoObject) -> bool:
         pass
 
 class RepoTransaction(metaclass=abc.ABCMeta):
@@ -94,7 +94,7 @@ class RepoTransaction(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def error(self, date: Date, error: str) -> None:
         pass
-    
+
     @abc.abstractmethod
     def create(self, period_type: DatePeriodType, the_date: Date) -> None:
         pass
