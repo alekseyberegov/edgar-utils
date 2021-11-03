@@ -5,7 +5,7 @@ class BasicSerializer:
     @staticmethod
     def encode_obj(obj):
         if type(obj).__name__ =='instance':
-            return obj.__dict__ 
+            return obj.__dict__
 
     @staticmethod
     def serialize(obj):

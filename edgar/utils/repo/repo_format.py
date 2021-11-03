@@ -115,7 +115,7 @@ class RepoObjectPath(RepoURI):
             the repo object for which a locator will be returned
         repo_format: RepoFormat
             the repo format
-        
+
         Returns 
         -------
         FileObjectLocator

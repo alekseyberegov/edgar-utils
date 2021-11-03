@@ -106,13 +106,12 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
         p: RepoObjectPath = RepoObjectPath.from_uri(obj_path, self.__format)
         e: RepoEntity = self.__root
 
-        for i in range(len(p)):
-            name: str = p[i]
+        for name in p:
             if name not in e:
                 e = e.new_dir(name)
             else:
                 e = e[name]
-        
+
         return e.new_object(obj_name)
 
     def find(self, period_type: DatePeriodType, the_date: Date) -> RepoObject:
@@ -122,7 +121,7 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             Parameters
             ----------
             period_type: DatePeriodType
-                the date period type            
+                the date period type
             the_date: Date
                 the date
 
@@ -147,7 +146,7 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             Returns
             -------
             RepoObject
-            
+
         """
         p: RepoObjectPath = RepoObjectPath.from_date(period_type, the_date, self.__format)
         return self.new_object(p.parent(), p[-1])

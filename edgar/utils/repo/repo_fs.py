@@ -1,5 +1,5 @@
 import abc
-from typing import Iterator, List, Dict, Tuple
+from typing import Iterator, List, Tuple
 from edgar.utils.date.date_utils import Date, DatePeriodType
 
 class RepoEntity(metaclass=abc.ABCMeta):
@@ -17,7 +17,7 @@ class RepoObject(RepoEntity, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def out(self, iter: Iterator[str], override: bool = False) -> None:
+    def out(self, iterator: Iterator[str], override: bool = False) -> None:
         pass
 
     @abc.abstractmethod
@@ -96,7 +96,7 @@ class RepoTransaction(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def create(self, period_type: DatePeriodType, the_date: Date) -> None:
+    def log(self, period_type: DatePeriodType, the_date: Date) -> None:
         pass
 
     @abc.abstractmethod

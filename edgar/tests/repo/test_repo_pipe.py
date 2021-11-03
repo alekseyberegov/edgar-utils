@@ -48,9 +48,9 @@ class TestRepoPipe:
         tracker: CallTracker = CallTracker()
         tracker.add_expected('date_range', [])
         tracker.add_expected('start' , [Date('2021-01-01')])
-        tracker.add_expected('create', [DatePeriodType.DAY, Date('2021-07-12')])
-        tracker.add_expected('create', [DatePeriodType.DAY, Date('2021-07-13')])
-        tracker.add_expected('create', [DatePeriodType.DAY, Date('2021-07-14')])
+        tracker.add_expected('log', [DatePeriodType.DAY, Date('2021-07-12')])
+        tracker.add_expected('log', [DatePeriodType.DAY, Date('2021-07-13')])
+        tracker.add_expected('log', [DatePeriodType.DAY, Date('2021-07-14')])
         tracker.add_expected('commit', [Date('2021-08-01')])
         tracker.assertCalls(repo_tx.mock_calls)
 
@@ -87,7 +87,7 @@ class TestRepoPipe:
         tracker: CallTracker = CallTracker()
         tracker.add_expected('date_range', [])
         tracker.add_expected('start' , [Date('2021-01-01')])
-        tracker.add_expected('create', [DatePeriodType.DAY, Date('2021-07-12')])
+        tracker.add_expected('log', [DatePeriodType.DAY, Date('2021-07-12')])
         tracker.add_expected('error',  [Date('2021-07-13'), repr(FileExistsError())])
         tracker.assertCalls(repo_tx.mock_calls)
 
