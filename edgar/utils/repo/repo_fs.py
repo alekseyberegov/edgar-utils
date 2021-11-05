@@ -82,23 +82,3 @@ class RepoDirVisitor(metaclass=abc.ABCMeta):
     def visit(self, obj: RepoObject) -> bool:
         pass
 
-class RepoTransaction(metaclass=abc.ABCMeta):
-    @abc.abstractmethod
-    def start(self, date: Date) -> None:
-        pass
-
-    @abc.abstractmethod
-    def commit(self, date: Date) -> None:
-        pass
-
-    @abc.abstractmethod
-    def error(self, date: Date, error: str) -> None:
-        pass
-
-    @abc.abstractmethod
-    def log(self, period_type: DatePeriodType, the_date: Date) -> None:
-        pass
-
-    @abc.abstractmethod
-    def date_range(self) -> Tuple[Date,Date]:
-        pass

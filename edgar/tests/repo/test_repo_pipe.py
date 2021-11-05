@@ -15,9 +15,9 @@ def sink_fs(dir_empty: tempfile.TemporaryDirectory, repo_format: RepoFormat):
     return FileRepoFS(Path(dir_empty.name), repo_format)
 
 @pytest.fixture
-def repo_tx():
+def repo_ledger():
     tx = mock.MagicMock()
-    tx.date_range.return_value = (Date('2021-01-01'), Date('2021-08-01'))
+    tx.next_period.return_value = (Date('2021-01-01'), Date('2021-08-01'))
     return tx
 
 @pytest.fixture
@@ -29,10 +29,10 @@ def missing(repo_format: RepoFormat) -> Iterator[RepoObjectPath]:
     ])
 
 class TestRepoPipe:
-    def test_sync_ndays(self, repo_tx, sink_fs: FileRepoFS, missing: Iterator[RepoObjectPath]) -> None:
+    def test_sync_ndays(self, repo_ledger, sink_fs: FileRepoFS, missing: Iterator[RepoObjectPath]) -> None:
         src_fs = mock.MagicMock()
         src_fs.find.side_effect = self.mock_find
-        pipe: RepoPipe = RepoPipe(repo_tx, src_fs, sink_fs)
+        pipe: RepoPipe = RepoPipe(repo_ledger, src_fs, sink_fs)
 
         with mock.patch("edgar.utils.repo.file_repo_fs.FileRepoFS.iterate_missing") as m:
             m.return_value = missing
@@ -46,50 +46,50 @@ class TestRepoPipe:
             assert o.exists()
 
         tracker: CallTracker = CallTracker()
-        tracker.add_expected('date_range', [])
+        tracker.add_expected('next_period', [])
         tracker.add_expected('start' , [Date('2021-01-01')])
-        tracker.add_expected('log', [DatePeriodType.DAY, Date('2021-07-12')])
-        tracker.add_expected('log', [DatePeriodType.DAY, Date('2021-07-13')])
-        tracker.add_expected('log', [DatePeriodType.DAY, Date('2021-07-14')])
-        tracker.add_expected('commit', [Date('2021-08-01')])
-        tracker.assertCalls(repo_tx.mock_calls)
+        tracker.add_expected('record', [DatePeriodType.DAY, Date('2021-07-12')])
+        tracker.add_expected('record', [DatePeriodType.DAY, Date('2021-07-13')])
+        tracker.add_expected('record', [DatePeriodType.DAY, Date('2021-07-14')])
+        tracker.add_expected('end', [Date('2021-08-01')])
+        tracker.assertCalls(repo_ledger.mock_calls)
 
-        (beg_date, end_date) = repo_tx.date_range()
+        (beg_date, end_date) = repo_ledger.next_period()
         assert sink_fs.find(DatePeriodType.DAY, beg_date) == None
         assert sink_fs.find(DatePeriodType.DAY, end_date) == None
 
 
     @mock.patch("edgar.utils.repo.file_repo_fs.FileRepoFS.iterate_missing")
-    def test_sync_missing_error(self, iterate_missing, repo_tx, sink_fs: FileRepoFS) -> None:
+    def test_sync_missing_error(self, iterate_missing, repo_ledger, sink_fs: FileRepoFS) -> None:
         src_fs = mock.MagicMock()
         src_fs.find.side_effect = self.mock_find
         error: FileNotFoundError = FileNotFoundError()
         iterate_missing.side_effect = error
-        pipe: RepoPipe = RepoPipe(repo_tx, src_fs, sink_fs)
+        pipe: RepoPipe = RepoPipe(repo_ledger, src_fs, sink_fs)
         pipe.sync()
 
         tracker: CallTracker = CallTracker()
-        tracker.add_expected('date_range', [])
+        tracker.add_expected('next_period', [])
         tracker.add_expected('start', [Date('2021-01-01')])
         tracker.add_expected('error', [None, repr(error)] )
-        tracker.assertCalls(repo_tx.mock_calls)
+        tracker.assertCalls(repo_ledger.mock_calls)
 
     @mock.patch("edgar.utils.repo.file_repo_fs.FileRepoFS.create")
     @mock.patch("edgar.utils.repo.file_repo_fs.FileRepoFS.iterate_missing")
-    def test_sync_create_error(self, iterate_missing, create, repo_tx, sink_fs: FileRepoFS, missing: Iterator[RepoObjectPath]) -> None:
+    def test_sync_create_error(self, iterate_missing, create, repo_ledger, sink_fs: FileRepoFS, missing: Iterator[RepoObjectPath]) -> None:
         src_fs = mock.MagicMock()
         src_fs.find.side_effect = self.mock_find
         iterate_missing.return_value = missing
         create.side_effect = self.mock_create
-        pipe: RepoPipe = RepoPipe(repo_tx, src_fs, sink_fs)
+        pipe: RepoPipe = RepoPipe(repo_ledger, src_fs, sink_fs)
         pipe.sync()
 
         tracker: CallTracker = CallTracker()
-        tracker.add_expected('date_range', [])
-        tracker.add_expected('start' , [Date('2021-01-01')])
-        tracker.add_expected('log', [DatePeriodType.DAY, Date('2021-07-12')])
+        tracker.add_expected('next_period', [])
+        tracker.add_expected('start',  [Date('2021-01-01')])
+        tracker.add_expected('record', [DatePeriodType.DAY, Date('2021-07-12')])
         tracker.add_expected('error',  [Date('2021-07-13'), repr(FileExistsError())])
-        tracker.assertCalls(repo_tx.mock_calls)
+        tracker.assertCalls(repo_ledger.mock_calls)
 
     def mock_find(self, *args, **kwargs):
         obj = mock.MagicMock()
