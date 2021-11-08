@@ -16,7 +16,7 @@ class RepoLedger(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def record(self, period_type: DatePeriodType, the_date: Date) -> None:
+    def record(self, date: Date, period_type: DatePeriodType) -> None:
         pass
 
     @abc.abstractmethod

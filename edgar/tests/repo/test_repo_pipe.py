@@ -48,9 +48,9 @@ class TestRepoPipe:
         tracker: CallTracker = CallTracker()
         tracker.add_expected('next_period', [])
         tracker.add_expected('start' , [Date('2021-01-01')])
-        tracker.add_expected('record', [DatePeriodType.DAY, Date('2021-07-12')])
-        tracker.add_expected('record', [DatePeriodType.DAY, Date('2021-07-13')])
-        tracker.add_expected('record', [DatePeriodType.DAY, Date('2021-07-14')])
+        tracker.add_expected('record', [Date('2021-07-12'), DatePeriodType.DAY])
+        tracker.add_expected('record', [Date('2021-07-13'), DatePeriodType.DAY])
+        tracker.add_expected('record', [Date('2021-07-14'), DatePeriodType.DAY])
         tracker.add_expected('end', [Date('2021-08-01')])
         tracker.assertCalls(repo_ledger.mock_calls)
 
@@ -75,19 +75,20 @@ class TestRepoPipe:
         tracker.assertCalls(repo_ledger.mock_calls)
 
     @mock.patch("edgar.utils.repo.file_repo_fs.FileRepoFS.create")
-    @mock.patch("edgar.utils.repo.file_repo_fs.FileRepoFS.iterate_missing")
-    def test_sync_create_error(self, iterate_missing, create, repo_ledger, sink_fs: FileRepoFS, missing: Iterator[RepoObjectPath]) -> None:
-        src_fs = mock.MagicMock()
-        src_fs.find.side_effect = self.mock_find
-        iterate_missing.return_value = missing
-        create.side_effect = self.mock_create
-        pipe: RepoPipe = RepoPipe(repo_ledger, src_fs, sink_fs)
-        pipe.sync()
+    def test_sync_create_error(self, create, repo_ledger, sink_fs: FileRepoFS, missing: Iterator[RepoObjectPath]) -> None:
+        with mock.patch("edgar.utils.repo.file_repo_fs.FileRepoFS.iterate_missing") as iterate_missing:
+            iterate_missing.return_value = missing
+            create.side_effect = self.mock_create
+            src_fs = mock.MagicMock()
+            src_fs.find.side_effect = self.mock_find
+
+            pipe: RepoPipe = RepoPipe(repo_ledger, src_fs, sink_fs)
+            pipe.sync()
 
         tracker: CallTracker = CallTracker()
         tracker.add_expected('next_period', [])
         tracker.add_expected('start',  [Date('2021-01-01')])
-        tracker.add_expected('record', [DatePeriodType.DAY, Date('2021-07-12')])
+        tracker.add_expected('record', [Date('2021-07-12'), DatePeriodType.DAY])
         tracker.add_expected('error',  [Date('2021-07-13'), repr(FileExistsError())])
         tracker.assertCalls(repo_ledger.mock_calls)
 

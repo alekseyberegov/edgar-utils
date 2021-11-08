@@ -30,7 +30,7 @@ class RepoPipe:
                 src_obj: RepoObject = self.__source.find(period_type, the_date)
                 dst_obj: RepoObject = self.__sink.create(period_type, the_date)
                 dst_obj.out(src_obj.inp(), override=True)
-                self.__trans.record(period_type, the_date)
+                self.__trans.record(the_date, period_type)
         except Exception as any_exp:
             self.__trans.error(the_date, repr(any_exp))
         else:

@@ -35,13 +35,16 @@ class FileRepoDir(RepoDir):
         return self.__path
 
     def refresh(self) -> None:
-        if self.__path.exists():
-            for e in self.__path.iterdir():
-                if e.name not in self:
-                    self[e.name] = FileRepoDir(e, self) if e.is_dir() else FileRepoObject(self, e.name)
-                else:
-                    if e.is_dir():
-                        self[e.name].refresh()
+        if not self.__path.exists():
+            return
+
+        for dir_item in self.__path.iterdir():
+            if dir_item.name not in self:
+                self[dir_item.name] = FileRepoDir(dir_item, self) if dir_item.is_dir() \
+                    else FileRepoObject(self, dir_item.name)
+            else:
+                if dir_item.is_dir():
+                    self[dir_item.name].refresh()
 
     def __iter__(self):
         return iter(self.__children.items())
@@ -91,13 +94,13 @@ class FileRepoDir(RepoDir):
         return sorted([name for (name, _) in self], reverse = True) if len(self) > 0 else []
 
     def get(self, path_list: List[str]) -> RepoEntity:
-        o = self
+        cur_ent = self
         for i in path_list:
-            if i in o:
-                o = o[i]
+            if i in cur_ent:
+                cur_ent = cur_ent[i]
             else:
                 return None
-        return o
+        return cur_ent
 
     def visit(self, visitor: RepoDirVisitor) -> None:
         for name in self.sort():

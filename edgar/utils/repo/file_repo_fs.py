@@ -1,3 +1,6 @@
+"""
+    File-based document repository
+"""
 from typing import Dict, List, Iterator
 from pathlib import Path
 from edgar.utils.repo.repo_fs import RepoObject, RepoFS, RepoEntity, RepoDirVisitor, RepoURI
@@ -8,16 +11,19 @@ from edgar.utils.date.holidays import us_holidays
 
 
 class FileRepoFS(RepoFS, RepoDirVisitor):
+    """
+        The class represents a file-based repository
+    """
     def __init__(self, root: Path, repo_format: RepoFormat) -> None:
         self.__root     : FileRepoDir = FileRepoDir(root)
         self.__format   : RepoFormat = repo_format
         self.__index    : Dict[str, RepoObject] = {}
 
     def find_missing(self, from_date: Date, to_date: Date) -> List[str]:
-        u: List[str] = []
-        for o in self.iterate_missing(from_date, to_date):
-            u.append(str(o))
-        return u
+        miss_list: List[str] = []
+        for repo_uri in self.iterate_missing(from_date, to_date):
+            miss_list.append(str(repo_uri))
+        return miss_list
 
     def iterate_missing(self, from_date: Date, to_date: Date) -> Iterator[RepoURI]:
         """
@@ -38,31 +44,33 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
         """
         self.refresh()
 
-        in_y, in_q = 0, 0
-        h: us_holidays = None
-        d: Date = from_date.copy()
+        track_year, track_quarter = 0, 0
+        cur_holidays: us_holidays = None
+        cur_date: Date = from_date.copy()
 
         for _ in range(to_date.diff_days(from_date)):
-            (y, q, *_) = d.tuple()
+            (cur_year, cur_quarter, *_) = cur_date.tuple()
 
-            if y != in_y:
+            if cur_year != track_year:
                 # Moving to the first or to the next year
-                h = us_holidays(y)
-                in_y, in_q = y, 0
+                cur_holidays = us_holidays(cur_year)
+                track_year, track_quarter = cur_year, 0
 
-            if not (d.is_weekend() or d in h):
-                o: RepoObjectPath = RepoObjectPath.from_date(DatePeriodType.DAY, d, self.__format)
-                if str(o) not in self.__index:
-                    if q != in_q:
+            if not (cur_date.is_weekend() or cur_date in cur_holidays):
+                obj_path: RepoObjectPath = RepoObjectPath.from_date(
+                    DatePeriodType.DAY, cur_date, self.__format)
+                if str(obj_path) not in self.__index:
+                    if cur_quarter != track_quarter:
                         # Add a quartely file to the update list
                         # only if it has not been added before
-                        yield RepoObjectPath.from_date(DatePeriodType.QUARTER, d, self.__format)
-                        in_q = q
+                        yield RepoObjectPath.from_date(
+                            DatePeriodType.QUARTER, cur_date, self.__format)
+                        track_quarter = cur_quarter
 
                     # Add a daily file to the update list
-                    yield o
+                    yield obj_path
             # next date
-            d += 1
+            cur_date += 1
 
     def get_object(self, obj_uri: str) -> RepoObject:
         """
@@ -78,14 +86,14 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             RepoObject | None
                 the repo objet at the given path. If no object is found then None is returned
         """
-        p: RepoObjectPath = RepoObjectPath.from_uri(obj_uri, self.__format)
-        e: RepoEntity = self.__root
-        for i in p:
-            if i in e:
-                e = e[i]
+        obj_path: RepoObjectPath = RepoObjectPath.from_uri(obj_uri, self.__format)
+        cur_ent: RepoEntity = self.__root
+        for i in obj_path:
+            if i in cur_ent:
+                cur_ent = cur_ent[i]
             else:
                 return None
-        return e
+        return cur_ent
 
     def new_object(self, obj_path: str, obj_name: str) -> RepoObject:
         """
@@ -103,16 +111,16 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             RepoObject
                 the newly created repo object
         """
-        p: RepoObjectPath = RepoObjectPath.from_uri(obj_path, self.__format)
-        e: RepoEntity = self.__root
+        obj_path: RepoObjectPath = RepoObjectPath.from_uri(obj_path, self.__format)
+        cur_dir: RepoEntity = self.__root
 
-        for name in p:
-            if name not in e:
-                e = e.new_dir(name)
+        for name in obj_path:
+            if name not in cur_dir:
+                cur_dir = cur_dir.new_dir(name)
             else:
-                e = e[name]
+                cur_dir = cur_dir[name]
 
-        return e.new_object(obj_name)
+        return cur_dir.new_object(obj_name)
 
     def find(self, period_type: DatePeriodType, the_date: Date) -> RepoObject:
         """
@@ -148,8 +156,8 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
             RepoObject
 
         """
-        p: RepoObjectPath = RepoObjectPath.from_date(period_type, the_date, self.__format)
-        return self.new_object(p.parent(), p[-1])
+        obj_path: RepoObjectPath = RepoObjectPath.from_date(period_type, the_date, self.__format)
+        return self.new_object(obj_path.parent(), obj_path[-1])
 
     def refresh(self) -> None:
         """
@@ -160,6 +168,6 @@ class FileRepoFS(RepoFS, RepoDirVisitor):
         self.__root.visit(self)
 
     def visit(self, obj: RepoObject) -> bool:
-        p: RepoObjectPath = RepoObjectPath.from_object(obj, self.__format)
-        self.__index[str(p)] = obj
+        obj_path: RepoObjectPath = RepoObjectPath.from_object(obj, self.__format)
+        self.__index[str(obj_path)] = obj
         return True

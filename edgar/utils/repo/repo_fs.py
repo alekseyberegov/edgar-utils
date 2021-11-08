@@ -1,5 +1,5 @@
 import abc
-from typing import Iterator, List, Tuple
+from typing import Iterator, List
 from edgar.utils.date.date_utils import Date, DatePeriodType
 
 class RepoEntity(metaclass=abc.ABCMeta):
