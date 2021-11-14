@@ -7,16 +7,19 @@ ONE_DAY: timedelta = timedelta(days=1)
 QUARTER_START_MONTH: Tuple[int, ...] = (1, 4, 7, 10, 13)
 
 class DatePeriodType(IntEnum):
-    DAY     = 1,
+    UNKNOWN = 0
+    DAY     = 1
     QUARTER = 2
 
     def __str__(self):
-        return "DQ"[self.value - 1]
+        return "UDQ"[int(self.value)]
 
     @staticmethod
     def from_string(code: str) -> 'DatePeriodType':
-        if code == "D": return DatePeriodType.DAY
-        if code == "Q": return DatePeriodType.QUARTER
+        return [
+            DatePeriodType.UNKNOWN,
+            DatePeriodType.DAY,
+            DatePeriodType.QUARTER][max(0,"UDQ".find(code))]
 
 class DatePeriodException(Exception):
     pass

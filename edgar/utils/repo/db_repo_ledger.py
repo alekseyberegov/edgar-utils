@@ -1,5 +1,6 @@
 import sqlite3
 import datetime
+from dataclasses import dataclass, field
 from typing import List, Tuple
 from edgar.utils.repo.repo_ledger import RepoLedger
 from edgar.utils.date.date_utils import Date, DatePeriodType
@@ -9,6 +10,15 @@ def to_timestamp() -> int:
 
 def from_timestamp(ts: int) -> datetime:
     return datetime.datetime.fromtimestamp(ts)
+
+
+@dataclass
+class EventObject:
+    name: str
+    date: str
+    data: str = ''
+    timestamp: int = field(default_factory=to_timestamp)
+
 
 class DbRepoLedger(RepoLedger):
     REPO_LEDGER_TABLE : str = 'repo_ledger'
@@ -46,37 +56,33 @@ class DbRepoLedger(RepoLedger):
         finally:
             cur.close()
 
-    def __insert(self,
-            event_name: str,
-            event_date: str,
-            event_data: str = '') -> None:
+    def __insert(self, event: EventObject) -> None:
         cur = self.__db_con.cursor()
         try:
-            record_timestamp = to_timestamp()
             cur.execute(
             f"""
                 INSERT INTO {DbRepoLedger.REPO_LEDGER_TABLE}
                 VALUES (
-                     {record_timestamp},
-                    '{event_name}',
-                    '{event_date}',
-                    '{event_data}'
+                     {event.timestamp},
+                    '{event.name}',
+                    '{event.date}',
+                    '{event.data}'
                 );
             """)
         finally:
             cur.close()
 
     def start(self, date: Date) -> None:
-        self.__insert('start', str(date))
+        self.__insert(EventObject('start', str(date)))
 
     def end(self, date: Date) -> None:
-        self.__insert('end', str(date))
+        self.__insert(EventObject('end', str(date)))
 
     def error(self, date: Date, error: str) -> None:
-        self.__insert('error', str(date), error)
+        self.__insert(EventObject('error', str(date), error))
 
     def record(self, date: Date, period_type: DatePeriodType) -> None:
-        self.__insert('record', str(date), str(period_type))
+        self.__insert(EventObject('record', str(date), str(period_type)))
 
     def next_period(self) -> Tuple[Date,Date]:
         pass
