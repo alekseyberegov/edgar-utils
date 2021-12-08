@@ -84,3 +84,6 @@ class SqliteDbDriver(DbDriver):
             return True
         except Error as e:
             raise e
+    
+    def close(self) -> None:
+        self.__db_con.close()

@@ -1,9 +1,10 @@
 import sqlite3
 import datetime
 from dataclasses import dataclass, field
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 from edgar.utils.repo.repo_ledger import RepoLedger
 from edgar.utils.date.date_utils import Date, DatePeriodType
+from edgar.utils.db.db_driver import DbDriver
 
 def to_timestamp() -> int:
     return int(datetime.datetime.now().timestamp())
@@ -11,66 +12,44 @@ def to_timestamp() -> int:
 def from_timestamp(ts: int) -> datetime:
     return datetime.datetime.fromtimestamp(ts)
 
-
 @dataclass
 class EventObject:
     name: str
     date: str
     data: str = ''
-    timestamp: int = field(default_factory=to_timestamp)
+    time: int = field(default_factory=to_timestamp)
 
 
 class DbRepoLedger(RepoLedger):
     REPO_LEDGER_TABLE : str = 'repo_ledger'
 
-    DDL: str = """
-        CREATE TABLE {repo_ledger} (
-            RECORD_TIMESTAMP    INT,
-            EVENT_NAME          VARCHAR(16),
-            EVENT_DATE          VARCHAR(10),
-            EVENT_DATA          VARCHAR(256)
-        );
-    """.format(repo_ledger = REPO_LEDGER_TABLE)
+    REPO_LEDGER_ATTRIBUTES: Dict[str, str] = {
+        'EVENT_TIME': 'INT',
+        'EVENT_NAME': 'VARCHAR(16)',
+        'EVENT_DATE': 'VARCHAR(10)',
+        'EVENT_DATA': 'VARCHAR(256)'
+    }
 
-    def __init__(self, db_path: str) -> None:
-        self.__db_con = sqlite3.connect(db_path)
+    def __init__(self, db_driver: DbDriver) -> None:
+        self.__db_driver = db_driver
         self.__db_init()
 
     def __del__(self):
-        self.__db_con.close()
+        self.__db_driver.close()
 
     def __db_init(self) -> None:
-        if not self.has_table(DbRepoLedger.REPO_LEDGER_TABLE):
-            cur = self.__db_con.cursor()
-            try:
-                cur.execute(DbRepoLedger.DDL)
-            finally:
-                cur.close()
-
-    def has_table(self, table_name: str) -> bool:
-        cur = self.__db_con.cursor()
-        try:
-            cur.execute(
-                f"SELECT count(name) FROM sqlite_master WHERE type='table' AND name='{table_name}'")
-            return cur.fetchone()[0] == 1
-        finally:
-            cur.close()
+        if not self.__db_driver.has_table(DbRepoLedger.REPO_LEDGER_TABLE):
+            self.__db_driver.create_table(
+                self.REPO_LEDGER_TABLE, self.REPO_LEDGER_ATTRIBUTES)
 
     def __insert(self, event: EventObject) -> None:
-        cur = self.__db_con.cursor()
-        try:
-            cur.execute(
-            f"""
-                INSERT INTO {DbRepoLedger.REPO_LEDGER_TABLE}
-                VALUES (
-                     {event.timestamp},
-                    '{event.name}',
-                    '{event.date}',
-                    '{event.data}'
-                );
-            """)
-        finally:
-            cur.close()
+        self.__db_driver.insert_row(self.REPO_LEDGER_TABLE,
+            {
+                'EVENT_TIME': event.time,
+                'EVENT_NAME': event.name,
+                'EVENT_DATE': event.date,
+                'EVENT_DATA': event.data
+            })
 
     def start(self, date: Date) -> None:
         self.__insert(EventObject('start', str(date)))
@@ -88,9 +67,4 @@ class DbRepoLedger(RepoLedger):
         pass
 
     def dump(self, limit: int = 10) -> List:
-        cur = self.__db_con.cursor()
-        try:
-            cur.execute(f"SELECT * FROM {DbRepoLedger.REPO_LEDGER_TABLE} LIMIT {limit}")
-            return cur.fetchall()
-        finally:
-            cur.close()
+        return self.__db_driver.fetch_rows(self.REPO_LEDGER_TABLE, limit)
