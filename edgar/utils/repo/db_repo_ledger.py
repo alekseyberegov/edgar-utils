@@ -1,6 +1,5 @@
-import sqlite3
 import datetime
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields, asdict
 from typing import Dict, List, Tuple
 from edgar.utils.repo.repo_ledger import RepoLedger
 from edgar.utils.date.date_utils import Date, DatePeriodType
@@ -14,21 +13,14 @@ def from_timestamp(ts: int) -> datetime:
 
 @dataclass
 class EventObject:
-    name: str
-    date: str
-    data: str = ''
-    time: int = field(default_factory=to_timestamp)
+    event_name: str
+    event_date: str
+    event_data: str = ''
+    event_time: int = field(default_factory=to_timestamp)
 
 
 class DbRepoLedger(RepoLedger):
-    REPO_LEDGER_TABLE : str = 'repo_ledger'
-
-    REPO_LEDGER_ATTRIBUTES: Dict[str, str] = {
-        'EVENT_TIME': 'INT',
-        'EVENT_NAME': 'VARCHAR(16)',
-        'EVENT_DATE': 'VARCHAR(10)',
-        'EVENT_DATA': 'VARCHAR(256)'
-    }
+    TABLE_NAME : str = 'repo_ledger'
 
     def __init__(self, db_driver: DbDriver) -> None:
         self.__db_driver = db_driver
@@ -37,19 +29,16 @@ class DbRepoLedger(RepoLedger):
     def __del__(self):
         self.__db_driver.close()
 
+    def __generate_columns(self) -> Dict[str, str]:
+        sql_types: Dict = {int: 'INT', str: 'VARCHAR(128)'}
+        return {field.name: sql_types[field.type] for field in fields(EventObject)}
+
     def __db_init(self) -> None:
-        if not self.__db_driver.has_table(DbRepoLedger.REPO_LEDGER_TABLE):
-            self.__db_driver.create_table(
-                self.REPO_LEDGER_TABLE, self.REPO_LEDGER_ATTRIBUTES)
+        if not self.__db_driver.has_table(DbRepoLedger.TABLE_NAME):
+            self.__db_driver.create_table(self.TABLE_NAME, self.__generate_columns())
 
     def __insert(self, event: EventObject) -> None:
-        self.__db_driver.insert_row(self.REPO_LEDGER_TABLE,
-            {
-                'EVENT_TIME': event.time,
-                'EVENT_NAME': event.name,
-                'EVENT_DATE': event.date,
-                'EVENT_DATA': event.data
-            })
+        self.__db_driver.insert_row(self.TABLE_NAME, asdict(event))
 
     def start(self, date: Date) -> None:
         self.__insert(EventObject('start', str(date)))
@@ -67,4 +56,4 @@ class DbRepoLedger(RepoLedger):
         pass
 
     def dump(self, limit: int = 10) -> List:
-        return self.__db_driver.fetch_rows(self.REPO_LEDGER_TABLE, limit)
+        return self.__db_driver.fetch_rows(self.TABLE_NAME, limit)

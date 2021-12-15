@@ -2,13 +2,11 @@
     The absract driver classes
 """
 import abc
-
 from typing import Dict, List
-from functools import reduce
 
 class DbDriver(metaclass=abc.ABCMeta):
     """
-        Asbtract DB driver
+        Asbtract database driver
     """
     @abc.abstractmethod
     def has_table(self, name: str) -> bool:

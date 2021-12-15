@@ -16,10 +16,10 @@ class TestDbRepoLedger:
         ledger.record(Date('2021-11-11'), DatePeriodType.DAY)
         end_ts: int = int(datetime.now().timestamp())
         rows: list = ledger.dump()
+        print(rows)
         assert len(rows) == 1
-        assert rows[0][0] >= beg_ts
-        assert rows[0][0] <= end_ts
-        assert rows[0][1] == 'record'
-        assert rows[0][2] == '2021-11-11'
-        assert rows[0][3] == 'D'
-        
+        assert rows[0][0] == 'record'
+        assert rows[0][1] == '2021-11-11'
+        assert rows[0][2] == 'D'
+        assert rows[0][3] >= beg_ts
+        assert rows[0][3] <= end_ts        
