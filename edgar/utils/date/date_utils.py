@@ -6,6 +6,13 @@ from enum import IntEnum
 ONE_DAY: timedelta = timedelta(days=1)
 QUARTER_START_MONTH: Tuple[int, ...] = (1, 4, 7, 10, 13)
 
+def to_timestamp() -> int:
+    return int(datetime.now().timestamp())
+
+def from_timestamp(ts: int) -> datetime:
+    return datetime.fromtimestamp(ts)
+
+
 class DatePeriodType(IntEnum):
     UNKNOWN = 0
     DAY     = 1

@@ -1,15 +1,9 @@
-import datetime
-from dataclasses import dataclass, field, fields, asdict
+from dataclasses import dataclass, field, asdict
 from typing import Dict, List, Tuple
 from edgar.utils.repo.repo_ledger import RepoLedger
-from edgar.utils.date.date_utils import Date, DatePeriodType
+from edgar.utils.date.date_utils import Date, DatePeriodType, to_timestamp
 from edgar.utils.db.db_driver import DbDriver
-
-def to_timestamp() -> int:
-    return int(datetime.datetime.now().timestamp())
-
-def from_timestamp(ts: int) -> datetime:
-    return datetime.datetime.fromtimestamp(ts)
+from edgar.utils.db.sql_utils import class_columns
 
 @dataclass
 class EventObject:
@@ -29,13 +23,9 @@ class DbRepoLedger(RepoLedger):
     def __del__(self):
         self.__db_driver.close()
 
-    def __generate_columns(self) -> Dict[str, str]:
-        sql_types: Dict = {int: 'INT', str: 'VARCHAR(128)'}
-        return {field.name: sql_types[field.type] for field in fields(EventObject)}
-
     def __db_init(self) -> None:
         if not self.__db_driver.has_table(DbRepoLedger.TABLE_NAME):
-            self.__db_driver.create_table(self.TABLE_NAME, self.__generate_columns())
+            self.__db_driver.create_table(self.TABLE_NAME, class_columns(EventObject))
 
     def __insert(self, event: EventObject) -> None:
         self.__db_driver.insert_row(self.TABLE_NAME, asdict(event))

@@ -11,14 +11,6 @@ class TestSqliteDbDriver:
     def test_has_table_false(self, db_driver: SqliteDbDriver) -> None:
         assert not db_driver.has_table('mytable')
 
-    def test_new_table_sql(self, db_driver: SqliteDbDriver) -> None:
-        sql: str = db_driver.new_table_sql('mytable', {'a': 'int', 'b': 'varchar(200)'})
-        assert sql == 'CREATE TABLE IF NOT EXISTS mytable(a int, b varchar(200))'
-
-    def test_new_row_sql(self, db_driver: SqliteDbDriver) -> None:
-        sql: str = db_driver.new_row_sql('mytable', {'a': 1, 'b': 'test'})
-        assert sql == "INSERT INTO mytable(a, b) VALUES(1, 'test')"
-
     def test_has_table_true(self, db_driver: SqliteDbDriver) -> None:
         assert db_driver.create_table('mytable', {'a': 'int', 'b': 'varchar(200)'})
         assert db_driver.has_table   ('mytable')
